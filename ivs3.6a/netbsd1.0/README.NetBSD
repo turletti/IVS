@@ -1,0 +1,54 @@
+IVS - Version for Sun SPARCstations (sun4c) under NetBSD/SPARC 1.0
+
+
+Note: This has not been tested under any other NetBSD architecture.  Most of
+the changes are generic; and should work on other NetBSD systems.  The audio
+changes might not, however.  Your mileage may vary.
+
+Changes to sun4OS4/Makefile to create "netbsd-1.0/Makefile":
+
+- Commented out include of "Makefile.vfc" and "Makefile.px" as there is no
+  NetBSD support for the VideoPix or Parallax cards (i.e., no video generation
+  support period)
+
+- Changed default X11 locations to "/usr/X11R6/lib" and "/usr/X11R6/include"
+  (Don't know if this would work for NetBSD/i386 with XFree86, though)
+
+- Changed MULTICAST_INCLUDE to /usr/include as NetBSD comes with Multicast
+
+- NetBSD's bundled compiler is "gcc" so "AXL" is not needed
+
+- Changed syntax for include of "Makefile.common as NetBSD (4.4BSD) uses the
+  `.include "<filename>"' syntax, not `include <filename>'
+
+
+Changes to the source files in src:
+
+- Various minor portability changes
+
+- display_wmgt.c changed to add a SIGSYS handler; if the MIT SHM extension is
+  enabled in the server, but there is no shared memory in the kernel, the
+  program will catch a SIGSYS and get EINVAL back from shmget() etc.
+
+- NetBSD uses getlogin(); cuserid() is deprecated
+
+- If NO_AUDIO is defined (as I originally built it), several bugs arise; these
+  are fixed
+
+- soundsparc.c contains various changes for NetBSD/SPARC audio support; one
+  of the main changes is that there is no "/dev/audioctl" device in NetBSD,
+  all the other changes are specific for the NetBSD audio driver and could
+  possibly be used by other NetBSD ports
+
+All of the audio-specific changes are from Francis Dupont; I merely merged his
+changes into the original "soundsparc.c" with #ifdef's.  All (or most) of the
+other changes are from me.
+
+
+There is no specific "user guide", per se'.  A "gmake" will build a version
+of "ivs" that supports audio sending and reception, and video reception (only).
+The syntax of this makefile is not compatible with the BSD make.
+
+Sat Jan 14 11:29:27 1995
+Greg Earle <earle@isolar.Tujunga.CA.US>
+

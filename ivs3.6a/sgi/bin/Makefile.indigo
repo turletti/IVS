@@ -1,0 +1,10 @@
+#----------------------------------------------------------------------
+# 1- INDIGO BOARD includes and libraries
+#
+#------------------- INDIGO CARD DEFINITIONS -----------------------
+#
+LIB_VIDEO_INDIGO=-lsvideo
+CARD_INCLUDE_INDIGO=
+CARD_DEF_INDIGO= -DINDIGOVIDEO -DINDYVIDEO
+OBJ_VIDEO_INDIGO=grab_indigovideo.o videosgi_indigo.o
+

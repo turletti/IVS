@@ -1,0 +1,527 @@
+.\"  @(#)ivs.1 v3.6 95/7/11 SMI
+.\"
+.\"  Copyright (c) 1995 by INRIA Sophia-Antipolis
+.\"
+.TH IVS 1 "11 July 1995"
+.SH NAME
+.B ivs
+(INRIA VIDEOCONFERENCING SYSTEM)
+ \- X11-based videoconferencing tool for SPARC, HP, DEC, Silicon 
+Graphic, PC/Linux and PC/FreeBSD workstations.
+.SH SYNOPSIS
+.B ivs
+[\fIdest\fR[/\fIvideo_port\fR]] [
+.B \-t \fIttl\fR ] [
+.B \-name
+.I session name
+] [
+.B \-ni \fInetwork interface\fR ] [
+.B \-r
+] [
+.B \-a
+] [
+.B \-deaf
+] [
+.B \-start_deaf
+] [
+.B \-v
+] [
+.B \-echo_on
+] [
+.B \-grey
+] [
+.B \-q
+.I quantizer
+] [
+.B \-K
+.I session key
+] [
+.B \-S 
+.I squelch level
+] [
+.B \-{floor1 | floor2}
+] [
+.B \-max_fr
+] [
+.B \-start_send
+] [
+.B \-rate_min
+.I value
+] [
+.B \-rate_max
+.I value
+] [
+.B \-{qcif | cif | scif}
+] [ 
+.B \-{pcm | adpcm | vadpcm}
+] [ 
+.B \-{small | medium | large}
+] [
+.B \-log
+] [
+.B \-stat
+] 
+.SH DESCRIPTION
+.LP
+.B ivs
+allows users to conduct multi-host audio and video conferences over the
+Internet. 
+.B ivs
+requires a workstation with a screen with 1, 4, 8 or 24 bits depth.
+Multi-host conferences require that the
+kernel support multicast IP extensions (RFC 1112).
+.P
+On video input, video frames are grabbed by the
+.B Parallax, SunVideo, VideoPix 
+or 
+.B VigraPix
+boards for SparcStations or the
+.B Raster Rops
+board for HP stations
+or the 
+.B IndigoVideo, GalileoVideo
+or
+.B VinoVideo
+boards for SGI IRIS Indigo and Indy workstations
+or the
+.B VIDEOTX
+board for DEC stations or the
+.B ScreenMachine II
+board for PC stations.
+
+There is no grabbing support yet on DEC ALPHA and PC/FreeBSD platforms.
+No special hardware apart from the workstation's build-in audio
+hardware is required for audio conference. 
+
+.B ivs
+may be run either in multicast mode or in unicast mode. Running
+ivs in unicast mode allows you to call someone on the network,
+provided that your party is running an ivs daemon (see ivsd(1)).
+To ring up your party, you need only to click on the
+.B Call up
+button. If your party does not respond, you can abort the ivs talk
+by clicking on the
+.B Abort call
+button. A message will notify your party of the talk request.
+
+.P
+Video encoding is done according to the
+.B H.261
+standard (but see BUGS below).
+The video stream can be encoded in either
+.B Super CIF
+(704x576 pixels) format or
+.B CIF
+(352x288 pixels) format or
+.B QCIF
+(176x144 pixels). By default,  format is 
+.B QCIF.
+
+The packetization scheme of H.261 video stream is described in an
+Internet Draft (see SEE ALSO section).
+Note that the decoder can decode a packet (i.e. part of
+an image) before all the packets from that image have been received.
+If a GOB doesn't contain any information, its header will be sent 
+with the next encoded GOB.
+
+
+The \fIControl Panel\fR
+menu allows you to choose the output rate control method. By default,
+the \fIAutomatic Control\fR option is selected. In this mode, the
+maximal video output rate is automatically tuned according to feedback
+information sent back from decoders. This mode should be used in most
+of cases. However, you can enforce a maximal video output rate
+using the \fIManual control\fR option or you can let the coder running
+without constraints using the \fIWithout control\fR option.
+The \fIMax bandwidth\fR selected either automatically or manually will
+act either by decreasing the video frame rate or the quality of the image:
+Using the \fIPrivilege quality\fR option the frame rate is reduced in
+order not to overrun the maximum rate chosen by the \fIMax bandwidth\fR
+scale. Using the \fIPrivilege frame rate\fR option, video output rate
+is controlled by selecting different quantizers and by changing
+the movement detection threshold. These parameters are dynamically
+chosen to fit in the bandwidth selected.
+
+
+The title of the \fIControl Panel\fR indicates the current mode
+\fISmall\fR / \fIMedium\fR / \fILarge\fR of the conference. NACK and FIR
+packets are used only in the \fISmall conference\fR mode. The mode changes
+dynamically according to the number of participants in the conference.
+The \fILarge\fR mode can only be set by the "active" participants,
+i.e. encoding audio and/or video data. If one active participant sets
+the \fILarge\fR mode, all the others participants in the group will
+up to date their conference mode to \fILarge\fR. In this mode, only
+the active participants periodically send their identification to the group.
+
+
+Access to an ivs session may now be controled by a password introduced
+either by the -K option or the ``key '' input in the ``Control'' popup menu.
+A null key means no control access. See also ``The use of plain text keys for 
+encryption of multimedia conferences'', draft V1.1, Mark Handley, UCL, London. 
+
+
+The
+.B local display
+button allow you to display the locally generated image directly.
+It is useful to tune the camera, or in unicast mode to see
+the video you send to your correspondent. Note that video grabbing on VIDEOTX
+and PARALLAX boards requires a local window displayed. 
+
+.SH Audio Tuning
+The \fIAudio Panel\fR menu allows you to tune audio and select the audio 
+encoding method. The audio stream can be encoded with either
+.B PCM
+(64 kb/s),
+.B ADPCM
+(32 kb/s) or
+.B VADPCM 
+(variable rate ADPCM) compression techniques. To avoid undesirable echo and
+larsen, the loudspeaker is automatically muted while speaking. However, you
+can disable this mode using the "Echo on/off" button.
+The ADPCM 32 kb/s codec is based on Jack Jansen's codec
+(Jack.Jansen@cwi.nl) with modifications to support the
+SparcStation's audio format. Note that the state record is reset with
+each packet to tolerate packet loss. 
+The VADPCM codec is a variant of the ADPCM codec, in which Huffman codes
+are used to encode ADPCM coefficients.
+
+.B ivs
+currently displays the list of active audio/video conference sites
+with your site appearing first in color. Sites which are sending
+audio/video are displayed first, and passive sites below.
+
+When a site is sending audio data, the corresponding site name is
+flashing in the list. Click on the audio icon next to its name
+to mute/unmute this site.
+Similarly, when a site is sending video data, an ``eye'' icon appears 
+next to its name. Click on this icon to hide or show its video.
+By default, audio and video information from remote sides are
+automatically decoded. Each station periodically sends
+a "declaration packet". 
+So, a station which doesn't reply is automatically marked on grey of the
+local table. It's useful because UDP is not reliable.
+
+Clicking in video windows will toggle an extra control panel
+which allows you to adjust the brightness and contrast of
+the image. It also includes a set of size buttons, a switch to view 
+the video as either grey scale or color (if color is being sent) and
+some statistics.
+.SH OPTIONS
+(Note that most of parameters set by the following flags can also be
+controlled by X resources. The flags only exist to temporarily override
+some resource.)
+.LP
+.TP 10
+.B \fIdest\fR [/\fIvideo_port\fR]
+Set the destination. You can specify a multicast address, an unicast
+address or a hostname. IP multicast address are in the range 224.0.0.0 
+to 239.255.255.255, but IANA has designated 64K block of addresses 
+for multimedia conferencing: 224.2.0.0 - 224.2.255.255. 
+By default this address is set to \fI224.2.224.2\fR.
+ivs uses three UDP
+port numbers, one for each data flow (video, audio, control). The
+\fIaudio port\fR is \fIvideo_port + 1\fR and the control port is 
+\fIvideo_port + 2\fR. Default \fIvideo port\fR is \fI2232\fR in
+multicast mode and \fI2235\fR in unicast mode. 
+.TP 10
+.B \-t \fIttl\fR
+Set the multicast time-to-live to \fIttl\fR.
+Default value is 16.
+.TP 10
+.B \-name \fIsession name\fR
+Override your unix user name with \fIsession name\fR
+.TP 10
+.B \-ni \fInetwork interface\fR
+Set the default network interface used to \fInetwork interface\fR.
+.TP 10
+.B \-r
+In this mode, only the stations which encode audio and/or video
+are stored in the local table. Useful when there are more than ten
+stations in the videoconference.
+.TP 10
+.B \-a
+Prevent automatic decoding of audio data.
+.TP 10
+.B \-v
+Prevent automatic decoding of video data.
+.TP 10
+.B \-deaf
+Run ivs without any audio facilities.
+.TP 10
+.B \-start_deaf
+Do not get the audio device by default.
+.TP 10
+.B \-echo_on
+Disable the automatic muting while speaking.
+.TP 10
+.B \-grey
+Force grey decoding display.
+.TP
+.B \-q \fIquantizer\fR
+Force the default quantizer value; useful when sending to Bitfield codec.
+.TP 10
+.B \-S \fIsquelch level\fR
+Force the default squelch level (silence detection threshold
+between 0 and 255).
+.TP 10
+.B \-floor1
+In this mode, video encoding is started/stopped when the ivs process
+receives respectively the SIGUSR1/SIGUSR2 signals. Note that these
+signals may be sent using two floor control tools \fIspeakers\fR and 
+\fIfloor\fR developed at SICS. (available by anonymous ftp from 
+ftp.sics.se in pub/mice directory)
+.TP 10
+.B \-floor2
+In this mode, SIGUSR1 and SIGUSR2 are used to respectively toggle the
+video output rate to \fIrate_max\fR and \fIrate_min\fR.
+.TP 10
+.B \-start_send
+In this mode, audio and video are sent at initialization.
+.TP 10
+.B \-{qcif | cif | scif}
+Set the default encoding image size.
+.TP 10
+.B \-{pcm | adpcm | vadpcm}
+Set the default audio encoding.
+.TP 10
+.B \-{small | medium | large}
+Set the default conference mode.
+.TP 10
+.B \-log
+Create a \fI/tmp/XX.ivs.login\fR file which lists all the participants in
+the conference, where XX is the processus number of ivs.
+.TP 10
+.B \-stat
+Enable the statistic mode. In this mode each video decoder saves in a
+file \fI.ivs_dloss_hostname\fR a log of all packets received/lost. The
+average loss rate and the average out of sequence received packets are
+displayed at the end of decoding.
+.SH "X Resources"
+The following are the names and default values of X resources used by
+.I ivs.  
+.LP
+.RS
+.nf
+! FLAGS (True, False) ...
+!
+! Default color encoding flag: 
+!	IVS*Color: True
+! Force grey decoding: 
+!	IVS*Force_grey: False
+! QCIF decoding is zoomed: 
+!	IVS*Qcif2cif: False
+! Video is sent at initialization: 
+!	IVS*Auto_send: False
+! Display the local window: 
+!	IVS*Local_display: False
+! Select the Privilege Quality - Privilege frame-rate modes:
+!	IVS*Privilege_quality: True
+! Enable the max_fr tuning: 
+!	IVS*Max_frame_rate: False
+! Enable the SQUEEZE mode (PARALLAX): 
+!	IVS*Px_squeeze: True
+! Enable the Push to Talk: 
+!	IVS*Push_to_talk: True
+! Distant video is automatically decoded: 
+!	IVS*Implicit_video_decoding: True
+! Distant audio is automatically decoded:
+!	IVS*Implicit_audio_decoding: True
+! Disable the audio codec:
+!	IVS*Without_any_audio: True
+! Get the audio device at the beginning:
+!	IVS*Implicit_get_audio: True
+! Only active participants are shown:
+!	IVS*Restrict_saving: False
+! Video encoding options hidden:
+!	IVS*Recv_only: False
+! Create a .ivs.login file:
+!	IVS*Log_mode: False
+! Enable the stat mode
+!	IVS*Stat_mode: False
+! Enable the debug mode
+!	IVS*Debug_mode: False
+! Key echo entering mode
+!	IVS*Key*echo: False
+!
+! OTHERS ...
+!
+! Select the default video board: (0)PARALLAX, (1)SUNVIDEO, (2)SUNVIDEO, 
+! (3)VIDEOPIX, (4)INDIGO, (5)GALILEO, (6)INDY, (7)RASTEROPS, (8)VIDEOTX,
+! (9)J300, (10)VIGRAPIX, (11)SCREENMACHINE.
+!#       IVS*Board_selected: 
+! Set the channel (PARALLAX): (0) CH_AUTO, (1) CH_1, (2) CH_2
+!	IVS*Px_channel: 0     
+! Set the format (PARALLAX): (0)NTSC,(1)PAL,(2)SECAM,(3)AUTO_PAL,(4) AUTO_SECAM
+!	IVS*Px_standard: 3     
+! Set the format (SCREENMACHINE II): (0)NTSC, (1)PAL, (2)SECAM
+!	IVS*Video_format: 0    
+! Enable the Secam format (VIGRAPIX): (0) enabled, (1)disabled
+!	IVS*Secam_format: 0    
+! Set the format (GALILEO VIDEO): (0)NTSC, (1)PAL
+!	IVS*Pal_format: 0    
+! Select the field (SCREENMACHINE II): (0)Freeze,(1)Even,(2)Odd,(3)Both
+!	IVS*Video_field: 0
+! Select the SCREENMACHINE board: (0) SM-1, (1) SM-2, (2) SM-3, (3) SM-4
+!	IVS*Current_sm: 0
+! Set the floor mode : (0) Floor by default, (1) on/off, (2) rate min/max
+!	IVS*Floor_mode: 0     
+! Set the Conference size : (0) Large, (1) Medium, (2) unused, (3) Small
+!	IVS*Conference_size: 3     
+! Set the image encoding size : (0) SCIF, (1) CIF, (2) QCIF
+!	IVS*Size: 2     
+! Set the output rate control mode: (0) Automatic,(1) Manual,(2) No control
+!	IVS*Rate_control: 0     
+! Set the minimal rate_max value
+!	IVS*Min_rate_max: 15    
+! Set the maximal rate_max value
+!	IVS*Rate_max: 150   
+! Set the VideoPix/SunVideo input port: (0) 1-Port, (1) 2-Port, (2) S-video 
+!	IVS*Port_video: 0     
+! Set the brightness tuning (0 to 100)
+!	IVS*Default_brightness: 50    
+! Set the contrast tuning (0 to 100)
+!	IVS*Default_contrast: 50    
+! Set the default quantizer value (between 1 and 31)
+!	IVS*Default_quantizer: 3     
+! Set the maximal frame_rate (between 1 and 30 fps)
+!	IVS*Frame_rate_max: 5
+! Set the default audio encoding: (0) PCM, (1) ADPCM-6, (2) ADPCM-5, 
+!				  (3) ADPCM-4, (4) ADPCM-3, (5) ADPCM-2, 
+!				  (6) VADPCM, (7) LPC, (8) GSM-13
+!	IVS*Audio_format: 0     
+! Set the default audio redundancy: (0) PCM, (1) ADPCM-6, (2) ADPCM-5, 
+!				  (3) ADPCM-4, (4) ADPCM-3, (5) ADPCM-2, 
+!				  (6) VADPCM, (7) LPC, (8) GSM-13, (9) NONE.
+!	IVS*Audio_redundancy: 0     
+! Set the default record level (between 0 and 100)
+!	IVS*Default_record: 20    
+! Set the default squelch level (between 0 and 100)
+!	IVS*Default_squelch: 40
+! Set the default volume level (between 0 and 100)
+!	IVS*Default_volume: 50    
+! Set the default ttl value (between 0 and 255)
+!	IVS*Default_ttl: 16    
+! Manage the NACK/FIR use. If nb_participants > Nb_max_feedback, 
+! then NACK/FIR are avoided.
+!	IVS*Nb_max_feedback: 10    
+! Set the session name
+!	IVS*Session_name:            
+! Set the default destination address
+!	IVS*Multicast_group: 224.2.224.2 
+! Set the default port number used for multicasting video
+!	IVS*Multicast_video_port: 2232
+! Set the default port number used for multicasting audio
+!	IVS*Multicast_audio_port: 2233
+! Set the default port number used for multicasting control
+!	IVS*Multicast_control_port: 2234 
+.SH CCITT RECOMMENDATION H.261
+This recommendation describes the video coding and decoding methods for the 
+moving picture component of audiovisual services at the rates of 
+.B "p x 64"
+kbits/s, 
+where p is in the range 1 to 30. Two picture scanning format are specified. 
+In the first format, 
+.BR CIF ,
+the luminance sampling structure is 352 pixels per line, 144 lines per
+picture in an orthogonal arrangement. Sampling of each of the two color
+difference components is at 176 pixels per line, 144 lines per picture,
+orthogonal. 
+The second format
+.BR QCIF ,
+has half the number of pixels and half the number of lines stated above.
+.SH NOTES
+.LP
+The 
+.B VideoPix 
+card is designed to be used with SparcStations IPC, 1, 1+, 2, IPX and 10.
+The IndigoVideo card is designed for IRIS Indigos
+(either R3000 or R4000 models) with Entry Graphics.
+.P
+The transmitted bit-stream doesn't contain a BCH11 (511,493) forward error
+correction code.
+The
+.B Athena 
+toolkit is used to provide the graphical user interface.
+The multicast IP extensions (RFC 1112) for SunOS are freely available by
+anonymous ftp from gregorio.stanford.edu in "vmtp-ip" directory.
+IP multicasting is standard on the SGI IRIS machines.
+.SH BUGS
+This software release can optionally encode video in color using a
+SparcStation, a Decstation or a SGI station.
+Motion vectors are not implemented in the coder, but can de decoded.
+.SH "SEE ALSO"
+.IR "Using VideoPix" ,
+.IR "CCITT Recommendation H.261",
+.I "RFC 1112"
+(Steve Deering, Stanford University),
+.I "Packetization of H.261 video streams", 
+(Christian Huitema, Thierry Turletti), December 10th 1993, Audio-Video
+Transport WG, Internet-Draft.
+.BR ivs_record (1),
+.BR ivs_replay (1),
+.BR ivsd (1),
+.BR ivs_gw (1),
+.BR speakers (1),
+.BR floor (1),
+.BR ADPCM (2),
+.BR X (1).
+
+.SH "AUTHORS"
+Thierry Turletti <turletti@sophia.inria.fr> from INRIA Sophia Antipolis.
+.br
+ADPCM audio codec provided by Jack Jansen <Jack.Jansen@cwi.nl>.
+.br
+LPC audio codec provided by Ron Zuckerman (ronzu@isu.comm.mot.com) from 
+Motorola and modified by Ron Frederick (frederic@parc.xerox.com) from 
+Xerox PARC and Hugues Devries from INRIA.
+.br
+GSM audio codec Jutta Degener and Carsten Bormann, Technische Universitaet 
+Berlin and modified for use in IVS by Andres Vega from INRIA.
+.br
+Redundancy procedures for the audio flow provided by Andres Vega and 
+Hugues Devries from INRIA.
+.br
+Colormap managing provided by Pierre Delamotte
+<delamot@wagner.inria.fr> from INRIA Rocquencourt.
+.br
+SGI Indigo video capture support provided by Guido Van Rossum
+<Guido.van.Rossum@cwi.nl>. Color grabbing added by Lei Wang
+<Lei.Wang@rus.uni-stuttgart.de>.
+.br
+HP video capture support provided by Edgar Ostrowski, Frank Ruge
+and Markus Rebensburg <{edgar|frank|markus}@prz.tu-berlin.dbp.de>.
+.br
+SUN Parallax video capture support using low level hardware library 
+provided by Andrzej Wozniak <wozniak@inria.fr> fom INRIA Rocquencourt.
+Andrzej split also part of the source code in several modules.
+.br
+DEC video capture support provided by Jian Zhang
+<jian@jrc.flinders.edu.au>, Ian west <west@jrc.flinders.edu.au> and Dick 
+Zetterberg <dick@ee.uts.edu.au>.
+.br
+DEC audio codec support using AF audio server provided by Robert
+Olsson <Robert.Olsson@data.slu.se>
+.br
+Atanu Ghosh <A.Ghosh@cs.ucl.ac.uk> from UCL help me to support the
+SunVideo video capture.
+.br 
+Ian Wakeman <I.Wakeman@cs.ucl.ac.uk> from UCL implemented the scalable control 
+congestion scheme. Jean Bolot <bolot@sophia.inria.fr> from INRIA
+Sophia Antipolis also contributed to the control congestion algorithm.
+.br
+Hugues Crepin <chugues@sophia.inria.fr> from INRIA Sophia Antipolis
+implemented the playout algorithm for the audio part of ivs. 
+.br
+Christian Huitema <huitema@sophia.inria.fr> implemented some security
+functions.
+.br
+Vesa Ruokonen <Vesa.Rokonen@lut.fi> worked on the Linux platform.
+.br
+Francis Dupont <Francis.Dupont@inria.fr> and Greg Earle 
+<earle@isolar.Tujunga.CA.US> worked on the NetBSD audio version.
+.br
+Garrett Wollman <wollman@halloran-eldar.lcs.mit.edu> worked on the FreeBSD
+platform.
+.br
+Frank Mueller <nig@nig.rhoen.de> provided the ScreenMachine II grabbing
+procedures for PC/Linux platforms.

@@ -1,0 +1,35 @@
++ Resolve the problem which appeared using the IP_MULTICAST_IF option. Now the
+  -ni option should also select the right network interface for the sending
+  socket. (thanks to Francis Dupont).
+
++ decode_h261 crashed (bug fixed)
+
++ In DEC and Linux platforms, the connect() call to the video source in 
+multicast mode does not work. This call has been removed in these platforms.
+
+* Added  the default following X resources to ivs.ad.
+	"*MyHostName.foreground:           Black",
+        "*HostName.foreground:           Black",
+
+* Added GSM audio coding. The coder used has been written by Jutta Degener and 
+  Carsten Bormann, Technische Universitaet Berlin and modified for use in ivs 
+  by Andres Vega from INRIA.
+
+* Added LPC audio coding. The coder used has been written from Ron Zuckerman (
+  ronzu@isu.comm.mot.com) of Motorola and modified by Ron Frederick 
+  (frederic@parc.xerox.com) from Xerox PARC. (Note that the quality obtained
+  is very bad).
+
+* Added redundancy in the audio packets. Now, the Audio Panel includes now 
+  options to choose the type of redundancy contained in each packet sent. The 
+  redundancy is obtained by adding at each packet information concerning the 
+  previous packet sent. This is currently manually done but this function 
+  will be selected automatically by the congestion control algorithm in a 
+  future version of ivs. The work has been done by Hugues Devries and 
+  Andres Vega from INRIA.
+
+
+
+
+
+

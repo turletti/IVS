@@ -1,0 +1,116 @@
+94/11/9:
+
+Now you are able to run the IVS on the SGI machine that equipped with
+IndigoVideo, or Galileo video, or Vino video. B/W QCIF, color QCIF,
+B/W CIF and color CIF format are supported. For Vino video, both PAL and
+NTSC inputs are supported, here PAL input comes from analog camera, NTSC
+input comes from digital input when Indycam is connected.
+
+OS Requirement :
+ - for the machine that uses IndigoVideo library IRIX 4.0.5 level D or
+   higher is required.
+
+ - for the machine that uses Video Library IRIX 5.2 or higher is
+   required.
+
+Changes :
+ - for IndigoVideo grabbing procedures get data no more from RGB format
+   but from YUV fromat. These procedures are in grab_indigovideo.c file.
+   The interface to IndigoVideo and adaptation to IVS3.3 are in
+   videosgi_indigo.c file.
+
+ - for Galileo video and Vino video grabbing procedures are in
+   grab_galileovideo.c file. The interface to video library and adaptation
+   to IVS3.3 are in videosgi_galileo.c file.
+
+Suggestions :
+
+
+ - when two different machines have same Video Library, binary made on one
+   machine can be used on another machine. i.e. you can make binary on an
+   Indy but run it on an Indigo 2 and vice-versa.
+
+ - the returned value from sgi_checkvideo() can be used to configurate
+   user interface of IVS, so that IVS set user interface in run time for
+   different machine. A common user interface to include all the features
+   of different machines are not required.
+
+
+   Lei Wang
+   <wang@rus.uni-stuttgart.de>
+   computer center
+   university of Stuttgart
+   Germany
+
+----------------------------------------------------------------------------
+
+93/6/30: Color grabbing added by Lei Wang <Lei.Wang@rus.uni-stuttgart.de>
+
+The performance is or the Indigo R3000/33MHz:
+Color QCIF: 2.0 - 5.2  f/s 
+Color  CIF: 0.5 - 1.4  f/s
+BW    QCIF: 4.0 - 11.4 f/s 
+BW     CIF: 1.2 - 10   f/s
+
+And for the Indigo R4000/100MHz:
+Color QCIF: 5.2 - ~11  f/s 
+Color  CIF: 1.4 - 3.3  f/s
+             ^     ^-- camera pointing at the wall.
+             |-- hand waving in front of camera.
+Rate control set to without any control, accept feedback.
+
+-----------------------------------------------------------------------------
+
+This new version is able to run on the SGI Indigo.
+
+I get a video frame rate of about 1 frame per second only, the coder
+seems rather slow on an Indigo (the board supports capturing up to
+12.5 frames/sec in PAL mode).
+
+Changes:
+
+(1) Added a port of soundbyte.c to the Indigo audio library.  All
+    Indigos and 4D/35 machines have audio hardware.  The new
+    file is called soundsgi.c, which *replaces* soundbyte.c when
+    compiling on the SGI.  You must compile the rest of the sources
+    with -DSPARCSTATION (which really means "use the interface from
+    soundbyte.c").
+
+    - I changed the squelch threshold in audio_coder.c from 40 to 30;
+      this seems to work better.
+
+    - I changed the default input level to 80, which is suitable for
+      the Indigo.
+
+    - I changed the default audio encoding to ADPCM_32, since the
+      VADPCM sounds terrible (does it work at all for suns?)
+
+(2) Added a port of the video grabber to the Indigo video library.
+    You need IRIX 4.0.5 level D or higher, and an Indigo video board
+    to use this (SGI's Indigo video board currently only fits in an
+    Entry level Indigo -- not in an XS or XS-24!).  The file is called
+    videosgi.c, and you must compile it as well as video_coder.c.  Use
+    -DINDIGOVIDEO.
+
+    - I've changed the #ifdef VIDEOPIX code in videoconf.c and
+      video_coder.c to surround only the parts that are really
+      specific for the videopix board, and added #ifdef INDIGOVIDEO
+      with appropriate SGI-specific code (the SGI version of the
+      interface doesn't export any SGI-specific types or variables to
+      the upper level -- maybe the PIX interface could be changed
+      similarly?)
+
+    - I turned on the MITSHM option in the Makefile, since the SGI X
+      server supports this.
+
+My changes to existing files are free for all.  The new files are
+copyrighted by my employer, but the copyright is not very restricting
+(similar to INRIA's).
+
+Cheers,
+
+--Guido van Rossum, CWI, Amsterdam <guido@cwi.nl>
+"It's spelled Raymond Luxury-Yacht but it's pronounced
+Throat-Wobbler Mangrove."
+
+

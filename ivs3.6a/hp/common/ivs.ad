@@ -1,0 +1,170 @@
+#                             IVS ENVIRONMENT FILE
+#
+# set the XENVIRONMENT variable to this file
+#
+#                            IVS PARAMETERS
+#
+# IVS Fonts ...
+#
+IVS*font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVS*Command.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVS*Label.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*Text*font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVS*ButtonPopup1.font: -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
+IVS*ButtonPopup2.font: -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
+IVS*ButtonPopup3.font: -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
+IVS*ButtonPopup4.font: -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
+IVS*HostName.font: -adobe-courier-bold-r-normal--14-140-75-75-m-90-iso8859-1
+IVS*MyHostName.font: -adobe-courier-bold-r-normal--14-140-75-75-m-90-iso8859-1
+IVS*NameBrightness.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*NameContrast.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*NameControl.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*NameFrms.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*LabelB.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*NameScale.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS*ValueScale.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+#
+# IVS Colors ...
+#
+IVS*Form.background:               Grey
+IVS*Label.background:              Grey
+IVS*Command.background:            MistyRose1
+IVS*Command.foreground:            Black
+IVS*ButtonQuit.background:         Red
+IVS*ButtonQuit.foreground:         White
+IVS*ButtonDismiss.background:      Red
+IVS*ButtonDismiss.foreground:      White
+IVS*FormBandwidth.background:      White
+IVS*ScrollScale.background:        LightSteelBlue4
+IVS*ScrollScale.foreground:        White
+IVS*LabelVideo.background:         Black
+IVS*LabelVideo.foreground:         MistyRose1
+IVS*LabelAudio.background:         Black
+IVS*LabelAudio.foreground:         MistyRose1
+IVS*MsgError.background:           Red
+IVS*HostName.background:           White
+IVS*MyHostName.background:         MistyRose1
+IVS*HostName.foredground:          Black
+IVS*MyHostName.foreground:         Black
+#
+# IVS Default options ...
+#
+IVS*Color:			   True
+IVS*Force_grey:			   False
+IVS*Qcif2cif:			   False
+IVS*Auto_send:			   False
+IVS*Local_display:		   False
+IVS*Privilege_quality:		   True
+IVS*Max_frame_rate:		   False
+IVS*Px_squeeze:                    True
+IVS*Auto_muting:		   True
+IVS*Implicit_video_decoding:	   True
+IVS*Implicit_audio_decoding:	   True
+IVS*Implicit_get_audio:		   True
+IVS*Without_any_audio:		   False
+IVS*Restrict_saving:		   False
+IVS*Recv_only:			   False
+IVS*Log_mode:			   False
+IVS*Stat_mode:			   False
+IVS*Debug_mode:			   False
+IVS*Key*echo:			   False
+IVS*Secam_format:                  0
+IVS*Pal_format:                    0
+IVS*Px_channel:                    0     
+IVS*Px_standard:                   3     
+IVS*Video_format:		   0
+IVS*Video_field:		   0
+IVS*Current_sm:			   0
+IVS*Floor_mode:                    0     
+IVS*Conference_size:               3     
+IVS*Size:			   2
+IVS*Rate_control:		   0
+IVS*Min_rate_max:		   15
+IVS*Rate_max:			   150
+IVS*Port_video: 		   0
+IVS*Default_brightness:		   50
+IVS*Default_contrast:		   50
+IVS*Default_quantizer:		   3
+IVS*Frame_rate_max:		   5
+IVS*Audio_format:		   0 
+IVS*Audio_redundancy:		   8
+#IVS*Default_record:		   20
+IVS*Default_squelch:		   40
+IVS*Default_volume:		   50
+IVS*Default_ttl:		   16
+IVS*Nb_max_feedback:		   10
+#IVS*Board_selected:               10
+#IVS*Session_name:		   Put here your name !
+IVS*Multicast_group:		   224.2.224.2
+IVS*Multicast_video_port:	   2232
+IVS*Multicast_audio_port:	   2233
+IVS*Multicast_control_port:	   2234
+#
+#
+#                            IVSD PARAMETERS
+#
+#
+IVSD*font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVSD*Form.background:              Grey
+IVSD*Command.background:           DarkSlateGrey
+IVSD*Command.foreground:           MistyRose
+IVSD*Label.background:             Grey
+IVSD*Daemon.foreground:            Black
+IVSD*Daemon.background:            MistyRose
+IVSD*MsgWarning.background:        Red
+IVSD*Accept.background:            Green
+IVSD*Accept.foreground:            Black
+IVSD*Refuse.background:            Red
+IVSD*Refuse.foreground:            Black
+IVSD*MsgRequest.background:        Grey
+IVSD*MsgRequest.Label.background:  MistyRose
+IVSD*Host.background:              Grey
+IVSD*Host.label:                   Enter hostname:
+IVSD*Group.label:                  Enter multicast address:
+IVSD*TTL.label:                    Enter TTL value:
+#
+#
+#                           IVS_RECORD PARAMETERS
+#
+#
+IVS_RECORD*font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVS_RECORD*MainForm.background:             Grey
+IVS_RECORD*MsgWarning.background:           Red
+IVS_RECORD*MsgShowWarning.background:       Grey
+IVS_RECORD*MsgShowWarning.label.foreground: Black
+IVS_RECORD*MsgShowWarning.label.background: MistyRose
+IVS_RECORD*Command.background:              Black
+IVS_RECORD*Command.foreground:              MistyRose
+IVS_RECORD*ButtonQuit.background:           Red
+IVS_RECORD*ButtonQuit.foreground:           White
+IVS_RECORD*ButtonQuit.label:                Quit
+IVS_RECORD*ButtonClear.label:               Clear
+#
+#
+#                            IVS_REPLAY PARAMETERS
+#
+#
+IVS_REPLAY*font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+IVS_REPLAY*Label.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS_REPLAY*NameBrightness.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS_REPLAY*NameContrast.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS_REPLAY*NameScale.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS_REPLAY*ValueScale.font: -adobe-courier-bold-r-normal--10-100-75-75-m-60-iso8859-1
+IVS_REPLAY*Form.background:                  Grey
+IVS_REPLAY*Command.background:               DarkSlateGrey
+IVS_REPLAY*Command.foreground:               MistyRose1
+IVS_REPLAY*Label.background:                 Grey
+IVS_REPLAY*ButtonQuit.background:            Red
+IVS_REPLAY*ButtonQuit.foreground:            White
+IVS_REPLAY*ScrollScale.background:           LightSteelBlue4
+IVS_REPLAY*ScrollScale.foreground:           White
+IVS_REPLAY*MsgError.background:              Red
+IVS_REPLAY*NameBrightness.label:             Brightness:
+IVS_REPLAY*NameContrast.label:               Contrast:
+IVS_REPLAY*ButtonDefault.label:              Default
+IVS_REPLAY*ButtonPlay.label:                 Push to play
+IVS_REPLAY*ButtonPause.label:                Pause
+IVS_REPLAY*ButtonQuit.label:                 Quit
+IVS_REPLAY*NameVolAudio.label:               Volume Gain:
+
+

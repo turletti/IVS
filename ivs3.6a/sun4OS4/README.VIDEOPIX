@@ -1,0 +1,46 @@
+IVS - Version for Sun SPARCstation with VIDEOPIX under SunOS 4.1.x or 5.3
+
+----------------------------- For SunOS 4.1.x: ------------------------------
+
+1/ Go to the sun4OS4 directory and edit the Makefile and the Makefile.vfc.
+
+2/ Check the following variables:
+
+PIX by default set to /usr (1.0-VFC directory)
+
+If you have the new VFC driver you can add -DVIDEOPIX_ASYNC to the VFC_DEF
+variable. That will speed the VideoPix grabbing a bit.
+
+X11_LIBDIR by default set to /usr/lib
+
+X11_INCLUDE by default set to /usr/include
+
+MULTICAST_INCLUDE by default set to /usr/sys/4.1.3.multicast
+If you don't have IP multicast extensions, please comment the -DMULTICAST
+compilation flag.
+
+3/ Type make all or make ivs if you only want to build ivs. 
+
+------------------------- For SunOS 5.3 (Solaris): --------------------------
+
+
+1/ Go to the sun4OS5 directory and edit the Makefile and the Makefile.vfc.
+
+2/ eventually uncomment the include Makefile.vfc line.
+
+3/ Check the following variables:
+
+PIX by default set to /usr/VIDEOPIX1.0/Solaris_BINREL
+
+If you have the new VFC driver you can add -DVIDEOPIX_ASYNC to the VFC_DEF
+variable. That will speed the VideoPix grabbing a bit.
+
+X11_LIBDIR by default set to /usr/lib/X11R5
+
+X11_INCLUDE by default set to /usr/include/X11R5
+
+MULTICAST_INCLUDE by default set to /usr/sys/4.1.3.multicast
+If you don't have IP multicast extensions, please comment the -DMULTICAST
+compilation flag.
+
+4/ Type make all or make ivs if you only want to build ivs. 

@@ -1,0 +1,20 @@
+#
+#---------------------------------------------------------------------
+# VIDEOPIX CARD includes and libraries
+#
+#PIX_SOL=/usr/VIDEOPIX1.0/Solaris_BINREL
+PIX_SOL=/u/jerry/0/rodeo/turletti/videopix/VIDEOPIX1.0/Solaris_BINREL
+VIDEOPIX_INCLUDE= -I$(PIX_SOL)
+VFC_LIB_VIDEO=/opt/SUNWits/Graphics-sw/xil/lib/libvfc.a
+#
+VFC_DEF= -DVIDEOPIX -DVIDEOPIX_ASYNC
+# add -DVIDEOPIX_ASYNC for the new VFC driver only
+#SS2, IPX and CYPRESS 670 only, not allowed for SUPERSPARC !
+#VFC_DEF+= -LDD_SBUS
+
+OBJ_VFC_VIDEO=	grab_vfc.o videosparc_vfc.o 
+
+LIB_VIDEO += $(VFC_LIB_VIDEO) /usr/ucblib/libucb.a -ldl -lw
+CARD_INCLUDE += $(VIDEOPIX_INCLUDE)
+CARD_DEF += $(VFC_DEF)
+OBJ_VIDEO += $(OBJ_VFC_VIDEO) 

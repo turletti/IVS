@@ -1,0 +1,61 @@
+.\"  @(#)ivs_replay.1 3.3 94/1/6 SMI
+.\"
+.\"  Copyright (c) 1994 by INRIA Sophia-Antipolis
+.\"
+.TH IVS_REPLAY 1 "6 January 1994
+.SH NAME
+.B ivs_replay
+\- play an ivs audio/video clip or broadcast a recorded ivs session.
+.SH SYNOPSIS
+.B ivs_replay
+[
+.B \-autostart
+] [
+\fIaddr\fR[/\fIvideo_port\fR]
+] [
+.B \-t \fIttl\fR
+]
+.B \-clip
+\fIfilename\fR
+.SH DESCRIPTION
+.LP
+This tool can play a local audio/video ivs encoded clip to the audio
+device and displays video in a window on the screen. ivs_replay can
+also broadcast a recorded distant ivs session in the same way the
+session has been received for the first time. To receive the
+broadcast, first run ivs with the same \fIaddr/video_port\fR
+parameters than ivs_record. Then, click on \fIPush to play\fR to start
+the broadcast.
+.SH OPTIONS
+.LP
+.TP 10
+.B \-autostart
+In this mode, replay starts automatically and no control panel is displayed.
+.LP
+.TP 10
+.B \fIaddr\fR[/\fIvideo_port\fR]
+Set the target ivs destination. You can specify a multicast address, an unicast
+address or a hostname. IP multicast address are in the range 224.0.0.0 
+to 239.255.255.255, but IANA has designated 64K block of addresses 
+for multimedia conferencing: 224.2.0.0 - 224.2.255.255.
+Three UDP port numbers are used : one for each data 
+flow (video, audio, control). The
+\fIaudio port\fR is \fIvideo_port + 1\fR and the control port is 
+\fIvideo_port + 2\fR. Default \fIvideo port\fR is \fI2232\fR in
+multicast mode and \fI2235\fR in unicast mode. 
+.LP
+.TP 10
+.B \-t \fIttl\fR
+Set the multicast time-to-live to \fIttl\fR.
+Default value is 16.
+.LP
+.TP 10
+.B \-clip \fIfilename\fR
+Specifies the ivs encoded clip to play or broadcast.
+.SH "SEE ALSO"
+.BR ivs(1),
+.BR ivs_record(1).
+
+.SH "AUTHOR"
+Thierry Turletti (turletti@sophia.inria.fr) of RODEO Project, INRIA Sophia
+Antipolis, FRANCE.

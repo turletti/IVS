@@ -1,0 +1,192 @@
+IVS - Version for PC platforms with SCREENMACHINE II board under Linux 1.X
+
+
+The ScreenMachine II is mainly a hardware overlay board, but can also
+grab video frames.
+The developer of the Linux Driver says, that the maximal grabbing rate is at
+320x240 5-6 fps under linux. Under Windows it should be 12 fps.
+I never reached 5-6 fps at 320x240, i have only a 486DX33, so coding and
+decoding seems to need a lot of cpu-time.
+I did some local tests, 
+
+QCIF greyscale with bandwith limited to 5 kbps: 0.2 (soccer game) ..11 or
+more (video from a wall)
+
+QCIF greyscale bandwith control off:  2.5 fps (soccer game) ..  13.2 fps 
+(video from a wall)
+
+CIF: bandwith control off : 0.5 fps (soccer) .. 5 fps (video from a wall)
+
+( all the rates from the ivs-display)
+
+Price: 1200 DM - 1500 DM in Germany.
+
+
+
+Here are some specs:
+--------------------------------
+
+SCREEN MACHINE II
+
+The 2nd Generation
+Screen Machine II developed by FAST Electronic is a great success all  
+over Europe. Why? Tailor-made software for users and and developers.  
+High image quality. And the impressive service provided by the  
+pioneer in video integration at the computer.
+You're sure to take a second look at Screen Machine II. It is a  
+completely new development in its hardware and software modules,  
+providing functionalities that  you have come to expect from Screen  
+Machine: high screen resolutions and transparencies, digital effects  
+usually only found in video studios. See for yourself.
+
+
+The New Hardware
+Super VGA resolutions, even at high image refresh rates
+Screen Machine II overcomes the resolution limit of 800 x 600 in  
+non-interlaced mode. Screen Machine II is the first video overlay  
+board to support VGA resolutions of 1024 x 768 non-interlaced at  
+screen frequencies of up to 76 Hz in graphics mode. The result?  
+Visibly better picture quality and no flicker. And your eyes will  
+thank you.
+Screen Machine II allows you to select the VGA adapter of your  
+choice. It is compatible to all high-resolution graphic cards. The  
+connection to a feature connector is recommended, but not required.  
+Screen Machine II can also be used without memory mapping in  
+computers with 16 MB RAM and more.
+
+Full PAL Resolution of 576 Lines in Standard 4:2:2
+Screen Machine II digitizes full PAL images (576 lines). This is over  
+10% more than other video digitizers (max. 512 lines). And,  
+naturally, Screen Machine II digitizes in 4:2:2 standard in 24-bit  
+true color (16.7 million colors).
+
+Optimal Display Quality and Digital Video Effects, thanks to Video  
+Machine Chips
+Screen Machine II incorporates the Professional Video Scaler and the  
+Video Memory Controller (VMC) used in Video Machine, the desktop  
+video studio from FAST. The scaler increases the display quality of  
+the live video considerably. The VMS provides video effects,  
+including video overlays, such as luma and chroma keying, mosaic,  
+etc. Developers of multimedia applications have a number of new  
+possibilities at their fingertips.
+
+
+The Screen Machine Product Family
+
+Screen Machine II
+The Basics
+Screen Machine II profits from all of the trusted features that have  
+already made Screen Machine Classic for PC so successful. These  
+include, of course,  uncompromising quality with regard to picture  
+display, file import/export in different standard image data formats,  
+complete control of brightness, contrast, color saturation, RGB color  
+components, extensive tools for display, frame grabbing, and  
+processing, color chart optimization, and scalable picture area. All  
+of this and we're thinking about the next generation too. Special  
+connectors support the upgrading to a hardware compression. This  
+accelerator will be available in the fall of 1993 and will lend wings  
+to your video animation projects. You will be more than prepared for  
+the future.
+
+Screen Machine. The Facts.
+
+Screen Machine HardwareScreen Machine II is a real-time video digitizer, 
+that digitize  
+images in true color or gray scales (16-bit add-on board). Screen  
+Machine II is also a multimedia board that is capable of displaying  
+live video in any size, at any position on your VGA monitor. Based on  
+the latest digital video technology, all hardware in the Screen  
+Machine range of products combine high-quality image recording,  
+digital video signal processing, and real-time video display on a  
+single board.
+
+
+Connecting Video Sources
+Screen Machine II has video inputs for composite  and  S-VHS signals  
+(3 x composite, or 1 x S-VHS plus 1 x composite). Thus all  
+camcorders, video recorders, laserdisc players, S-Video, Video 8,  
+U-Matic, and still video equipment in any standard (PAL, NTSC, SECAM)  
+can be hooked up to the board. It also has a digital noise  
+suppression feature for weak video signals and a digital timebase  
+corrector (TBC) for stabilizing signals from mechanical video sources  
+(e.g. video recorders).
+
+
+System Requirements
+486-compatible PC with 16-bit slot; NeXTSTEP 3.2 for Intel or higher;  
+16 MB RAM; VGA graphics card and analog monitor.
+
+
+Delivery Package
+Hardware
+16-bit add-on board, S-Video, Color keying with connecting cable,  
+input cable for video source, S-Video cable, manual.
+
+Software
+SMCamera, image grabbing; SMPreview, simple overlay app; SMSetup,  
+system configuration; Screen Machine Kernel;
+
+
+
+Technical DATA :
+
+Color resolution
+24-bit true color (16.7 million colors)
+
+Digitizing time
+1/50 sec. field PAL (1/60 NTSC)
+1/25 sec. frame PAL (1/30 NTSC)
+
+Video inputs
+composite, max. 1Vpp 75 Ohm, AGC
+S-Video
+3 inputs, software selectable
+up to 4 Screen Machine IIs per PC
+
+Video standards
+PAL, NTSC, SECAM
+
+Video scan rate
+14.75 MHz (PAL) with 2x oversampling
+
+Geometric resolution
+768 x 576 pixels frame (PAL)
+640 x 480 pixels frame (NTSC)
+square pixels
+
+Effects
+digital video effects (e.g., negative,
+posterizing, mosaic, continuous zoom,
+flip, etc.), look-up table
+chroma keying (blue box effects) 
+
+
+Output
+RGB with 0.7 Vpp 75 Ohm
+15-pin DBX-VGA standard connector
+
+Display
+non-interlaced conversion
+flicker-free
+scaling with digital filtering
+
+Resolutions
+640 x 480, 800 x 600, 1024 x 768 (76 Hz)
+1120 x 832 (68 Hz) (all non interlaced)
+1280 x 1024 (interlaced)
+
+Recording/Playback
+1 MB V-RAM
+
+Storage format
+YUV 4:2:2 (8 bit)
+
+
+---------------------------------------------------------------------- 
+Frank Mueller (nig@nig.rhoen.de) Tel: +49 6656 / 1443
+IN-kompetent e.V. 
+Verein zur Foerderung der privaten Datenkommunikation Rhoen/Vogelsberg
+
+   
+		   
+

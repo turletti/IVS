@@ -1,0 +1,24 @@
+adpcm_6.o:$(ADPCM)/adpcm_6.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_6.c
+
+adpcm_5.o:$(ADPCM)/adpcm_5.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_5.c
+
+adpcm_4.o:$(ADPCM)/adpcm_4.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_4.c
+
+adpcm_3.o:$(ADPCM)/adpcm_3.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_3.c
+
+adpcm_2.o:$(ADPCM)/adpcm_2.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_2.c
+
+adpcm_n.o:$(ADPCM)/adpcm_n.c $(ADPCM)/adpcm_n.h $(PCMU)/pcmu_l.h \
+	$(SRCS)/codec.h $(SRCS)/trace.h $(SRCS)/defaults.h
+	$(CC) $(CFLAGS) -c $(ADPCM)/adpcm_n.c
+

@@ -1,0 +1,82 @@
+.\"  @(#)ivs_record.1 3.3 94/3/2 SMI
+.\"
+.\"  Copyright (c) 1994 by INRIA Sophia-Antipolis
+.\"
+.TH IVS_RECORD 1 "3 March 1994
+.SH NAME
+.B ivs_record
+- write audio/video-data in a file from one ivs participant or all the
+participants from an ivs session.
+.SH SYNOPSIS
+.B ivs_record
+\fIaddr_from\fR[/\fIvideo_port\fR]
+[
+.B \-nofir
+] [
+.B \-only \fIhostname\fR
+]
+.B \-clip \fIfilename\fR
+.SH DESCRIPTION
+.LP
+This tool records in a file an audio/video clip locally from one ivs
+participant or at distance all the participants from an ivs session. 
+
+To start a recording, click on the
+.B "Push to start recording"
+button. As soon as the button 
+.B "Push to stop recording"
+appears, the recording begins. You
+may concatenate several sequences using the same clip name. A clip
+may be deleted by clicking on the "clear " button. A "Pause" button
+allows you to stop temporarely the replay. Just click on the "Cont"
+button to continue the decoding.
+.LP
+A local clip recorded with 
+.B ivs_record
+can be sent via e-mail using metamail (MIME) programs. To do this,
+you have to append the line \fI"application/x-ivs; ivs_replay -clip %s"\fR
+in your mailcap file; see metamail(1).
+.SH OPTIONS
+.LP
+.TP 10
+.B \-only \fIhostname\fR
+In this mode, only the \fIhostname\fR participant in the multicast
+group is recorded. You can specify the \-nofir option if you don't
+want to wait for the first full intra video packet received to start the
+recording. A clip recorded using this mode should be replayed like a classic
+unicast recorded clip, i.e. without the \fIaddr\fR[/\fIvideo_port\fR]
+replay option.
+.LP
+.TP 10
+.B \fIaddr_from\fR[/\fIvideo_port\fR]
+Set the target ivs source. You can specify a multicast address, an unicast
+address or a hostname. IP multicast address are in the range 224.0.0.0 
+to 239.255.255.255, but IANA has designated 64K block of addresses 
+for multimedia conferencing: 224.2.0.0 - 224.2.255.255. 
+Three UDP port numbers are used : one for each data 
+flow (video, audio, control). The
+\fIaudio port\fR is \fIvideo_port + 1\fR and the control port is 
+\fIvideo_port + 2\fR. Default \fIvideo port\fR is \fI2232\fR in
+multicast mode and \fI2235\fR in unicast mode. 
+.LP
+.TP 10
+\-nofir
+Do not request a Full Intra Image (FIR) before starting the record. By
+default, a FIR is sent to the targer participant when only there is
+only one participant to record (unicast mode or \fIonly\fR option used.
+.LP
+.TP 10
+.B \-clip \fIclipname\fR
+Specify the output clip name.
+.SH "NOTES"
+.LP
+Each ivs video clip includes a header which encodes the version of the
+ivs tool. In order not to remove this header, always use the ``Clear''
+button to clear a clip.
+.SH "SEE ALSO"
+.BR metamail(1),
+.BR ivs(1),
+.BR ivs_replay(1).
+.SH "AUTHOR"
+Thierry Turletti (turletti@sophia.inria.fr) of RODEO Project, INRIA Sophia
+Antipolis, FRANCE.
