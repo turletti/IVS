@@ -1,0 +1,39 @@
+.\"  @(#)ivsd.1 2.2 93/1/25 SMI
+.\"
+.\"  Copyright (c) 1992 by INRIA Sophia-Antipolis
+.\"
+.TH IVSD 1 "25 January 1993
+.SH NAME
+.B ivsd
+- server for ivs program
+
+.SH SYNOPSIS
+.B ivsd
+
+.SH DESCRIPTION
+.LP
+.B ivsd
+is a server used by the 
+.B ivs
+(1) program. It listens at the tcp port 2241. When you run it, a
+small icon appears. When a remote ivs request is received, the
+icon will change, and a message 
+will pop up showing you the ivs caller. At this point, you only
+need to click on 
+.B Accept
+button to start the ivs call.
+
+If you click on the ivs icon, you will be able to initiate an ivs session
+in unicast or multicast mode.
+
+
+.SH NOTES
+.LP
+The ivs program must be visible by the PATH environment variable.
+
+.SH "SEE ALSO"
+.BR ivs(1).
+
+.SH "AUTHOR"
+Thierry Turletti (turletti@sophia.inria.fr) of RODEO Project, INRIA Sophia
+Antipolis, FRANCE.
