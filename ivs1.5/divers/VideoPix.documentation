@@ -1,0 +1,418 @@
+.ds LF \fBDraft #5\fP
+.ds RF \fBSun Proprietary: Internal Use Only\fP
+.ND
+.TL
+VideoPix Performance
+.AU
+David T. Berry
+.AI
+Sun Microsystems
+.sp
+20th September 1991
+.SH
+History
+.sp
+20th September #5, Include color matching numbers and 4/470 blit
+speeds over VME and P4.
+.sp
+\fP25th March #4, included performance results from overlapping grab
+and process the image.
+.sp
+1st March #3, revised the section on multiple clients table.
+.NH 1
+Introduction
+.LP
+This report lists a series of facts gathered from using the VideoPix
+hardware and software. It also attempts to explain some of the workings
+of the VideoPix software and reasoning behind it. Some of the numbers
+from the first draft of the report have been adjusted. In particular
+the local preview rate numbers have been revised and should now be
+more accurate. Some new numbers have been added, which break the
+process down into steps and measure each step in microseconds.
+.LP
+Some knowledge of the VideoPix product is assumed in this report. I
+expect the reader to have at least used the program vfctool, or have
+seen it demonstrated.
+.LP
+The rates quoted in the tables are in frames per second, unless
+otherwise noted. Numbers presented here are approximate, they will vary
+with system load. In most of the experiments the systems were lightly
+loaded, with at most running OW with a few shelltools, mailtool, clock
+and other basic desktop tools.
+.LP
+All of the examples quoted in this report are for NTSC format video.
+It is to be expected that the performance for PAL format images will
+be lower, because there are more lines and horizontal pixels in the image.
+.NH 1
+Hardware facts
+.LP
+The VideoPix hardware was designed to be inexpensive and a lot of
+things that could have been done in hardware, were moved to software.
+This fact should be remembered when considering the performance of the
+product. The data on the hardware is stored as 11-bit non-square YUV 4:1:1
+data. This reflects the fact that the decoder chips were originally
+designed for the video industry and not the computer industry. Another
+feature of the hardware is the use of FRAM (Field RAM) to store the
+data. This type of memory provides serial access only to the image
+data. As a result to get to any one pixel in an image then all of the
+pixels up to the desired pixel must be read and discarded.
+.LP
+One hardware fact that is taken advantage of is that the two fields of
+interlaced video data are placed in separate banks of memory. This
+factor is utilized in most of the preview modes.
+.NH 1
+Local Performance
+.LP
+Local performance is the situation in which the pixels are pulled
+directly from the VideoPix hardware, the display image computed and
+then blitted to the screen. The blit is performed using the System V
+shared memory extensions which are part of OW2.
+.LP
+In this revised section we detail the steps involved in displaying an
+image and report measured times for the length of each stage,
+outside of the vfctool preview mode loops. This allows us to
+concentrate on each area individually. For example, in the
+transfer time case all that was measured was the time to transfer the
+pixels over the bus, and in the blit case a static image was blitted
+constantly from memory to the screen. The first table provides a
+comparison of the times necessary, minus processing time, to display a
+640*480 8-bpp (bits per pixel) image. Times are in seconds.
+.TS
+tab(:) center box;
+l|l|l|l|l.
+CPU/FB**:Grab:Xfer:Blit:Total
+_
+SS1/cg3:0.05s:0.100851s:0.0666s:~0.22s
+_
+SS1+/cg6:0.05s:0.100614s:0.042s:~0.19s
+_
+SS2/cg6:0.05s:0.0726s:0.03571s:~0.16s
+.TE
+.FS
+** cg3 is the standard unaccelerated frame buffer. cg6 is the 
+GX accelerated frame buffer, also known as lego. cg12 is the GS, 24-bit 
+accelerated frame buffer also known as egret.
+.FE
+.LP
+The first stage in the process is to digitize or grab the image. The
+current VideoPix hardware must wait for the start of a frame before it
+can begin digitizing the data. This means that the average possible
+delay before the frame grab is completed is 3 field times or 3/60 =
+0.05s. This time is independent of hardware architecture.
+.LP
+The second stage is the transfer of the data out of the VideoPix card and
+into host memory. Each transfer is a 32-bit transfer and for the
+various sizes of image used in vfctool the data transferred is always
+the same. The blanking information, for the NTSC odd field, 17*720
+pixels (12240), and the image field data 720*240 pixels (172800).
+.LP
+Stage three is actually the processing of the data, however for this
+part of the study this has been skipped over and we will move directy
+to the blit. The blit time is the time to display the 640*480 8-bpp
+image using the X11 shared memory extensions. This does drop with cpu
+speed, as illustrated in the following table.
+.TS
+tab(:) center box;
+l|c|c|c.
+ :X Y Z:X Y Z:X Y Z
+_
+CPU/FB:640 480 8:360 240 8:180 120 8
+_
+SS1/cg3:15fps:29.14fps:111.27fps
+_
+SS1+/cg6:23.6fps:25.5fps:95fps
+_
+SS2/cg6:28.5fps:51fps:195fps
+_
+SS2/cg12:22fps:(42.5fps ?):167fps
+=
+ :X Y Z:X Y Z:X Y Z
+_
+CPU/FB :640 480 32:360 240 32:180 120 32
+_
+SS2/cg12:5.6fps:(25.5fps ?):42.5fps
+=
+ :X Y Z X11-Routine:X Y Z X11 Routine
+_
+CPU/FB :640 480 8 Shm:640 480 8 Put: Bus
+_
+4-470/cg6:30.98fps:5.9fps: P4
+_
+4-470/cg2:7.67fps:3.78fps: VME
+.TE
+.LP
+The time to actually take the image and put it on the screen using
+shared memory is equivalent in speed to XGL.
+.LP
+This is a quote from some mail that Steve Johnson (an engineer in the
+XGL group) posted to the openwin-interest alias at Sun, re image blit
+speeds.
+.in +8
+.sp
+\fIThe X11 shared memory extension implementation in the OW V2 server
+was consistently the same performance as the xgl_context_copy_raster
+function, for images of varying sizes. .... 
+.sp
+The V2 implementation of XPutImage was slower for large images, but
+the time it took to copy small images (less than 64*64) was exactly
+the same for Xlib, xgl_context_copy_raster and the shared memory
+extensions. That is, my benchmarks did not have the timer resolution
+to detect a difference between the copy times. Typical benchmarks,
+copy an image 1000 times to the screen and use "wall clock" start/stop
+times.
+.sp
+[Measurements for copying pixels were made on the GX frame buffer
+only.]\fP
+.in -8
+.NH 2
+Computing the Display Image
+.LP
+The method in which the display image is computed varies depending on
+the type of image to be displayed. Because the VideoPix hardware
+stores image data in YUV it is relatively easy to obtain grayscale 
+information, as this is what Y is. As the Y data is stored in the upper byte
+of the word, a shift is required to place it in an 8-bit quantity. An
+add is also required at this stage, because the colormap for
+displaying the image does not start at pixel 0. If the offset is 0
+then the add is not performed. Resampling for square pixels is
+performed whilst the image is computed. The loop to perform
+the resampling has been unrolled such that the resampling does not add
+a great deal of overhead.
+.LP
+To display an 8-bit color image the YUV data is converted to BGR and
+then dithered to 8-bit color. The conversion to BGR and dither are
+performed for the most part through the use of look-up tables. I feel
+that the performance achieved to date is acceptable, but would be
+happy if more could be found. In the 8-bit color case the resampling
+for square pixels is performed when the BGR data is dithered to 8-bit
+color. For 24-bit color, the square pixel resampling is performed after
+the YUV data has been converted to a line of XBGR data. It is extremely 
+difficult to resample the YUV data for square pixels in the color case 
+because of the 411 sub-sampling of the UV portion of the data. In preview
+mode for full color the previous line of BGR data is retained and
+redithered to get the next line. This preserves the dither, but avoids
+performing the YUV to BGR conversion for every line.
+.LP
+The different sizes of images available with the current software are
+also computed differently depending on size. In the case of the
+640*480 NTSC square pixel, preview images (\fIFull\fP) these are in
+fact 640*240 images with lines replicated. On grab the replicated lines are
+replaced by the other portion of the field. The (\fIHalf\fP) size NTSC
+images are 360*240. They are non-square, simply because it is easier
+to resample the non-square data to be a 1/2 of what it was. This is
+only a temporary Preview image so speed was of more concern than
+square pixels. The (\fIQuarter\fP) size NTSC images are 180*120, again
+resampling for speed rather than square pixels.
+.NH 2
+Local Performance Result
+.NH 3
+Wait for Grab to Complete.
+.LP
+When all of the above factors are added together into vfctool the
+preview mode rates for the various image sizes and types were as
+listed in the following table. The times in this table have been
+revised to reflect a more accurate set of measurements that I made
+from the 15th of February draft. These numbers are frames per second.
+.TS
+tab(:) center box;
+l|l l|l l|l l
+l|c c|c c|c c.
+ :Full: :Half: :Quarter
+_
+CPU/FB:B&W:Color:B&W:Color:B&W:Color
+_
+SS1/cg3:2.95fps:0.82fps:5.0fps:1.0fps:5.5fps:1.9fps
+_
+SS1+/cg6:3.7fps:1.0fps:5.95fps:1.4fps:7.45fps:2.3fps
+_
+SS2/cg6:4.3fps:1.4fps:6.0fps:1.85fps:7.5fps:3.0fps
+_
+SS2/cg6 **: :1.3fps: :1.9fps: :2.9fps
+.TE
+.FS
+** These numbers were for the use of colormap matching. This involves
+extra processing before the image is sent to the screen.
+.FE
+.NH 3
+Overlap Grab and Display
+.LP
+This table lists the results obtained when the software was modified to
+perform the grab and process operations in parallel. This effectively
+eliminates the time to complete the grab of the image. The software now
+instructs the hardware to start a non-blocking grab, directly after
+reading and processing the current frame. The image is then blitted to the
+screen. The next time into the preview routine a check is made to see if
+sufficient time has elapsed for it to be safe to read the image data. If
+this is true the image is read and processed. If insufficient time has
+elapsed, the software will sleep until the ad-hoc delay has occurred.
+This removes the capture time from the preview speed equations. In
+practice this produced rates, for half and quarter screen grayscale, close 
+to the theoretical maximum of fields per second. Color rates are not shown
+as there was no significant speed improvement.
+.TS
+tab(:) center box;
+l|l|l|l
+l|c|c|c.
+ :Full:Half:Quarter
+_
+CPU/FB:B&W:B&W:B&W
+_
+SS1/cg3:3.54fps:7.1fps:8.2fps
+_
+SS1+/cg6:4.5fps:9.0fps:10.0fps
+_
+SS2/cg6:5.7fps:9.0fps:11.0fps
+_
+SS2/cg6 **:3.64fps:8.2fps:10.0fps
+.TE
+.FS
+** These numbers were for the use of colormap matching. This involves
+extra processing before the image is sent to the screen.
+.FE
+.NH 1
+Networked VideoPix
+.LP
+The network performance of the current VideoPix code is a little more
+difficult to analyze. simply because there are more factors involved. 
+To try and get a grasp on what is happening it is necessary to examine 
+the inner workings of the network video server and the client vfctool. 
+The two flow charts at the end of this report show how the main nvserver 
+loop operates. The following points should be noted,
+.IP [1].
+When sockets are active if the asynchronous write (aiowrite) to it has not
+finished then it will miss that frame. This allows clients which are
+capable of receiving data faster to be unaffected by slower clients.
+.IP [2].
+There are various paths of optimization when reading the data from the
+VideoPix hardware. Firstly, if the buffer that is to be sent to
+the client already exists, it is copied and then the aiowrite is
+started. Secondly, if there is only one active video stream then the buffer can
+be obtained directly from the hardware without having to read an
+intermediary YUV frame. Thirdly, if the YUV frame has already been
+read then the required buffer is calculated from that YUV buffer.
+.NH 2
+Bytes Transferred
+.LP
+Another factor to be considered is the number of bytes transferred for
+a particular mode. In the 1.1 version of the video server this table
+illustrates how many bytes are transferred over the network. The Z
+dimension is number of bytes per pixel.
+.TS
+tab(:) center box;
+l|l l|l l|l l|l l.
+ :B&W: :8-bit Color: :YUV: :BGR
+_
+ :X Y Z:Bytes:X Y Z:Bytes:X Y Z:Bytes:X Y Z:Bytes
+_
+Full:640*240*1:153600:640*480*1:370200:720*240*2:345600:640*240*3:460800
+_
+Half:360*240*1:86400:360*240*1:86400:720*240*2:345600:360*240*3:259200
+_
+Quarter:180*120*1:21600:180*120*1:21600:720*120*2:172800:180*120*3:64800
+.TE
+.IP [1].
+For B&W full screen the lines are replicated at the client.
+.IP [2].
+In the 8-bit color full screen case we are forced to send
+the complete 640*480 image otherwise the dither pattern which created
+the image is destroyed by line replication.
+.IP [3].
+For 24-bit color, in the current implementation, the server sends a
+field of YUV data and the client converts it to XBGR data. This is
+less expensive than sending the BGR field.
+.IP [4].
+For BGR data the client expands the data to XBGR for display on a
+24-bit frame buffer.
+.NH 2
+Experimental Results
+.LP
+The experiments listed here have been conducted over a period of time
+during Sun working hours. experiments were conducted with machines
+connected to each other on the same ethernet, through at least one
+gateway and over many gateways.
+.NH 3
+Single Client
+.LP
+In the single client case the server can pull pixels directly from the
+hardware and is effectively running in a local preview mode loop with
+the network in between the client and the server.
+.TS
+tab(:) center box;
+l|l l l|l l l|l l l
+l|l l l|l l l|l l l
+l|c c c|c c c|c c c.
+ :Full: : :Half: : :Quarter
+_
+Configuration:B&W:Color-8:Color-24:B&W:Color-8:Color-24:B&W:Color-8:Color-24
+_
+SS1 to SS1+:
+Same net:1.7fps:0.5fps:N/A:3.8fps:0.9fps:N/A:5.6fps:1.6fps:N/A
+_
+SS1 to SS2:
+2 Gateways:1.1fps:0.5fps:0.6fps:1.8fps:0.8fps:0.5fps:6.2fps:1.8fps:1.25fps
+_
+SS1 to SS1+:
+B21 to B17:
+~7 gateways:0.3fps:0.12fps:N/A:0.62fps:0.34fps:N/A:2.48fps:1.15fps:N/A
+.TE
+.NH 3
+Multiple Clients
+.LP
+This series of experiments was conducted to try to simulate a video
+conference between SparcStations with VideoPix cards on the same
+network connected by ethernet. A third client over a gateway was also
+connected to try to gauge how the performance was affected with this
+more distant client.
+.LP
+The image size transmitted for each connection was Half B&W. This
+meant that the second client asking for that size would only require a
+copy of the previously calculated buffer to be made. Local refers to
+the fact that the server and the client are running on the same system.
+.TS
+tab(:) center box;
+l|l|l|l|l|l|l|l.
+Configuration:View:1:2:3:4:5:6
+_
+Machine1 SS1:local: : : :1fps:1fps:1fps
+ :Remote:4fps:2fps:1fps:1fps:1fps:1fps
+_
+Machine 2 SS1+:Local: : :1fps:1fps:1fps:1fps
+ :Remote: :2fps:2fps:1fps:1fps:1fps
+_
+Machine 3 4/470:Remote: : : : :0.3fps:0.15fps
+.TE
+.IP [1].
+One client connected remotely to the server.
+.IP [2].
+The clients and servers were cross coupled. One remote client
+connected to the others server and vice versa.
+.IP [3].
+One of the systems started a new client and connected it to the local
+system.
+.IP [4].
+The second system started a new client and connected it to its local
+system. Now each system is running a server, one client connected to
+the remote machine and one too the local machine.
+.IP "[5, 6]."
+A third remote client was now connected to the SS1+ system. This
+client was located at least one, possibly two gateways away. In entry
+5 of the table it was running at Half screen B&W, and 6 was full
+screen 8-bit color. The rates that this client received pictures is
+given below.
+.in +8
+.sp
+(5) Half B&W = 0.25 to 0.41fps
+.br
+(6) Full Color = 0.1 to 0.2fps
+.sp
+.in -8
+.LP
+The interesting thing that was noted in the experiments was the
+operation of the server main loop. The third remote client clearly missed
+frames that were being received by the two clients connected over the
+local net. Also note that the rates for the four local ethernet
+clients were not significantly affected by the addition of the remote
+client even when the remote client asked for the most computationally
+intensive picture Full 8-bit color.
+
+

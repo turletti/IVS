@@ -1,0 +1,21 @@
+# set XENVIRONMENT variable to this file
+
+*VIDEOCONF*background:		                LightSteelBlue
+*VIDEOCONF*dwa.scale.background:	        grey
+*VIDEOCONF*dwa*Quit.background:		        red
+*VIDEOCONF*dwa*Quit.foreground:		        white
+*VIDEOCONF*dwa*Default.background:		Aquamarine1
+*VIDEOCONF*dwa*Default.foreground:		black
+*VIDEOCONF*dwa*Contrast.background:	        LightSteelBlue
+*VIDEOCONF*dwa*Brightness.background:	        LightSteelBlue
+*VIDEOCONF*FontList: -b&h-lucida-bold-r-normal-sans-12-120-75-75-p-79-iso8859-1
+*VIDEOCONF*XmRowColumn*background:	        MistyRose1
+*VIDEOCONF*XmRowColumn*foreground:	        LightSteelBlue4
+*VIDEOCONF*dwa*XmPushButton*foreground:         MistyRose1
+*VIDEOCONF*dwa*XmPushButton*background:         LightSteelBlue4
+*VIDEOCONF*form*XmPushButton*foreground:	black
+*VIDEOCONF*form*XmPushButton*background:	Aquamarine1
+*VIDEOCONF*form*XmLabel*background:		white
+*VIDEOCONF*form*XmLabel*foreground:		black
+*VIDEOCONF*formtitle.XmLabel*background:        black
+*VIDEOCONF*formtitle.XmLabel*foreground:        Aquamarine1
