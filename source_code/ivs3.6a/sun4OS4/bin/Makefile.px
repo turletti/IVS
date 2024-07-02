@@ -1,0 +1,19 @@
+#----------------------------------------------------------------------
+# 2- PARALLAX BOARD includes and libraries
+#
+#-------------------  PARALLAX CARD DEFINITIONS -----------------------
+#
+PX_DEF= -DSUN_PX_VIDEO -DPARALLAX -DLOW_LEVEL
+PX_DEF += -DHARDWARE_PARALLAX 
+PX_G_DEF= -DGRAB_PX_BYTE
+PX_G_DEF_F= -DGRAB_PX_STD
+GRAB_PX_HEADERS= $(SOURCES)grab_px.h $(SOURCES)px_macro.h
+#PARALLAX_HOME=/usr/parallax/components/Xclients_sun4.ow3_1.15
+PARALLAX_HOME=/usr/local/parallax/components/Xclients_sun4.x_1.17
+OBJ_GRAB_PX= grab1_px.o grab2_px.o grab3_px.o \
+	     grab4_px.o grab5_px.o grab6_px.o \
+	     grab7_px.o grab8_px.o grab9_px.o
+LIB_VIDEO += -L$(PARALLAX_HOME)/lib -lXvid
+CARD_INCLUDE += -I$(PARALLAX_HOME)/include
+CARD_DEF += $(PX_DEF)
+OBJ_VIDEO += $(OBJ_GRAB_PX) videosparc_px.o $(SOURCES)$(PX_SYS)hard_lib_px.o

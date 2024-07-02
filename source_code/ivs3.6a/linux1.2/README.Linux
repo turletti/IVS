@@ -1,0 +1,23 @@
+IVS - Notes for Linux
+
+- Audio works with sound card (tested with SoundBlaster)
+- Video is supported only in receiving. No grabber support.
+ 
+The IVS for Linux was ported on Slackware 2.1.0 installation,
+updated with libc-4.6.27, gcc-2.6.2 and Linux-1.1.75.
+
+The default linux/Makefile should have reasonably standard
+and working settings:
+- Shared memory (-DMITSHM) is supported in XFree 3.x
+- Multicast (-DMULTICAST) is supported in kernel since version 1.1.72. 
+  In kernel the multicast can be activated as a "make config" option.
+  For point-to-point use only, remove MULTICAST from linux/Makefile.
+- The -DNO_AUDIO should be uncommented if the host has no audio device.
+  Uncomment -DI386AUDIO for sound card.
+ 
+Audio recording doesn't work reliably yet. To tune audio device
+parameters it's better to use mixer tool from snd-util-2.5.
+
+Sun Jan 15 21:50:42 EET 1995
+Vesa.Ruokonen@lut.fi
+

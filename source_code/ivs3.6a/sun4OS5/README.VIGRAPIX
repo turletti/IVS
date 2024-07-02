@@ -1,0 +1,47 @@
+IVS - Version for Sun SPARCstation with VIGRAPIX under SunOS 4.1.x or 5.3
+
+For more info about the VigraPix board, see the following Web page at URL:
+<http://www.vigra.com/vigrapix/>
+
+----------------------------- For SunOS 4.1.x: ------------------------------
+
+1/ Go to the sun4OS4 directory and edit the Makefile and the Makefile.vigrapix.
+
+2/ eventually uncomment the include Makefile.vigrapix line.
+
+3/ Check the following variables:
+
+VIGRAPIX_HOME by default set to /usr/local/vigrapix/lib
+
+X11_LIBDIR by default set to /usr/lib/X11R5
+
+X11_INCLUDE by default set to /usr/include
+
+MULTICAST_INCLUDE by default set to /usr/sys/sys.4.1.3_U1.multicast
+If you don't have IP multicast extensions, please comment the -DMULTICAST
+compilation flag.
+
+4/ Type make all or make ivs if you only want to build ivs. 
+
+------------------------- For SunOS 5.3 (Solaris): --------------------------
+
+
+1/ Go to the sun4OS5 directory and edit the Makefile and the Makefile.vigrapix.
+
+2/ eventually uncomment the include Makefile.vigrapix line.
+
+3/ Check the following variables:
+
+VIGRAPIX_HOME by default set to /usr/local/vigrapix/lib
+
+If you have the new VFC driver you can add -DVIDEOPIX_ASYNC to the VFC_DEF
+variable. That will speed the VideoPix grabbing a bit.
+
+X11_LIBDIR by default set to /usr/openwin/lib
+
+X11_INCLUDE by default set to /usr/openwin/include
+
+4/ Type make all or make ivs if you only want to build ivs. 
+
+
+Thierry Turletti

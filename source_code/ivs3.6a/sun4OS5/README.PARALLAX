@@ -1,0 +1,93 @@
+IVS - Version for Sun SPARCstation with PARALLAX XVideo under Solaris
+
+93.06.30.
+
+This is a completely new release of grabbing procedures and grabbing window
+management for the PARALLAX XV card.
+
+the following new features have been added:
+
+- B&W & COLOR images are supported for all sizes CIF, QCIF and CIF4
+- selection (automatic & manual) of video signal standard:
+  NTSC, PAL, SECAM,
+- selection (automatic & manual) of input channel and format from 
+  COMPOSITE, YC, and RGB, YUV (with option card)
+- Grabbing window can be displayed in full size (for CIF4, CIF, QCIF)
+  or in reduced size (352x288 i.e. CIF size for CIF & QCIF).
+- Grabbing window image can be mirrored in X and Y direction.
+- "Local display" button changes the the output of video grabbing
+  hardware from RGB to YCrCb, the image colors look strange but
+  as conversion from RGB to YCrCb color space is CPU time consuming
+  this speeds up grabbing about 20%.
+
+  Video grabbing procedures use direct low level hardware control
+  to achieve performance. Low level procedures are located in hard_lib_px.o 
+  file.
+  Their source files are not distributed.
+
+Installation.
+------------
+  There is a known problem with PARALLAX card: the system can panic 
+  and lock or reboot when a message is output directly on the screen bypassing
+  Xwindow.
+  This is because one cannot access the frame buffer when the graphic
+  accelerator is working.  You must route the output that would normally 
+  appear on the console to the pseudo-terminal instead. The following
+  program executed after the X server have been started do the job. It can be
+  included in your window  manager start script shell for example.
+
+/*----------------------------*/
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/termios.h>
+main()
+{
+  if(ioctl(0, TIOCCONS, 0)<0)
+    printf("\ncan't TIOCCONS\n");
+}
+/*----------------------------*/
+
+  When a conflict between accelerated graphics and frame buffer access arises,
+  the card can lock and any further access to it causes bus error. If it occurs
+  in kernel mode it creats a deadlock trying to access frame buffer. So, if
+  you need to debug any program accessing directly the frame buffer or to do
+  kernel debug, setting of console output to the ttyA or ttyB serial port is
+  strongly recommended (or you can use 2 frame buffers parallax and standard 
+  SUN device setting the console output to the second).
+  
+  As the new grabbing procedures access directly the parallax card hardware,
+  you must change the /dev/tvtwo mode. This is done by executing as root
+  the command: 
+  >chmod og+rw /dev/tvtwo0
+  which sets the crw-rw-rw- mode for the parallax device driver.
+  
+  
+Performance on SS2 workstation:
+-------------------------------
+  SS2 workstation is about 50% slower in integer performance compared to 
+  the SS10 workstation. But the SBUS slot access is faster on the SS2.
+  So for "almost static" image performances are similar for both 
+  workstations. For "changing" image SS2 is much slower. Displaying incoming
+  image (especially big format) further decreases encoding speed.
+
+  BUGS:
+  ----
+  - As the SAA7191 DMSD device is not able to distinguish PAL from SECAM
+    system, you must give a hint to automatically choose NTSC/PAL or NTSC/SECAM
+    (from ivs menu).
+  - Squeezed images have some artifacts (on moving objects) this is why 
+    you can select unsqueezed grabbing window.
+  - NTSC frame is only  640x480 pixels size. CIF4 and unsqueezed grabbing
+    is padded with a gray frame.
+  - Use of option board (RGB or VIO) was not tested.
+
+Comments, suggestions and bug report are welcome!
+
+Andrzej Wozniak.
+
+ INRIA-Rocquencourt FRANCE.
+
+wozniak@inria.fr
+
+
+

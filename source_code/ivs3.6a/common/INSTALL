@@ -1,0 +1,42 @@
+/**************************************************************************\
+*          Copyright (c) 1995 INRIA Sophia Antipolis, FRANCE.              *
+*                                                                          *
+* Permission to use, copy, modify, and distribute this material for any    *
+* purpose and without fee is hereby granted, provided that the above       *
+* copyright notice and this permission notice appear in all copies.        *
+* WE MAKE NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY OF THIS     *
+* MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", WITHOUT ANY EXPRESS   *
+* OR IMPLIED WARRANTIES.                                                   *
+\**************************************************************************/
+95/7/11
+
+IVS 3.6v - Installation guide of IVS for the IETF demo
+
+WARNING: This version is not really well tested, so do not remove your
+previous ivs version from your site. This version should be used at the IETF
+demo at Stockholm. There are some incompatibilities with previous IVS versions
+concerning the audio part. Please read the README file.
+
+Only 3 platforms are available for this version:
+
+- iris5.3 (for SGI - IRIS 5.3 GALILEO/INDIGO/VINO VIDEO platforms)
+- sun4OS4 (for SunOS4.x - PARALLAX/VIDEOPIX/VIGRAPIX platforms)
+- sun4OS5 (for SunOS5.x - PARALLAX/SUNVIDEO/VIDEOPIX/VIGRAPIX platforms)
+
+All compressed files contain manual pages and README files.
+Sources files and Makefiles for all platforms are included in
+ivs3.6-src.tar.gz.
+
+
+
+Information about ivs is available via the following URL:
+<http://www.inria.fr/rodeo/ivs.html>
+
+Thierry Turletti
+
+turletti@sophia.inria.fr
+<http://www.inria.fr/rodeo/personnel/Thierry.Turletti/ivs.html>
+
+
+
+

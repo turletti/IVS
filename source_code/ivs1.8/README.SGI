@@ -1,0 +1,82 @@
+This is a version of IVS 1.8 that I ported to the SGI Indigo, for both
+audio and video (if you have it).
+
+I get a video frame rate of about 1 frame per second only, the coder
+seems rather slow on an Indigo (the board supports capturing up to
+12.5 frames/sec in PAL mode).
+
+I hope that eventually (in 1.9?) Thierry will merge the SGI and Sparc
+versions, but for now I'll just make the sources as modified for SGI
+available on ftp.cwi.nl in pub/ivs1.8sgi.tar.Z.  This is an entire
+distribution (though not very polished).  To build, go to the sgi
+subdirectory, edit the Makefile, and type "make".  It should still be
+possible to build the Sun version in the sun4OS4 subdirectory.
+
+Changes:
+
+(1) General changes because of compiler differences:
+
+    - Changed #else/#endif followed by text to include the text in
+      comments (ANSI compilers complain about this)
+
+    - made two callbacks in videoconf.c non-static because they were
+      declared forward as extern (this is hard to fix)
+
+    - replaced all occurrences of S_un.S_addr by s_addr
+
+    - in rate.c, declared "average()" as "void average(sig) int sig;"
+
+    - fixed two occurrences of printf(stderr, "...") in videoconf.c
+
+    - added #include <arpa/inet.h> to videoconf.c
+
+    - added a call signal(SIGALRM, CallbackDeclare); to the alarm
+      signal handler
+
+    - disabled the XmNrightAttachment argument in the creation of the
+      drawing area (dwa) to avoid a weird effect when the text on the
+      "Start Audio Encoding" button changes
+
+(2) Added a port of soundbyte.c to the Indigo audio library.  All
+    Indigos and 4D/35 machines have audio hardware.  The new
+    file is called soundsgi.c, which *replaces* soundbyte.c when
+    compiling on the SGI.  You must compile the rest of the sources
+    with -DSPARCSTATION (which really means "use the interface from
+    soundbyte.c").
+
+    - I changed the squelch threshold in audio_coder.c from 40 to 30;
+      this seems to work better.
+
+    - I changed the default input level to 80, which is suitable for
+      the Indigo.
+
+    - I changed the default audio encoding to ADPCM_32, since the
+      VADPCM sounds terrible (does it work at all for suns?)
+
+(3) Added a port of the video grabber to the Indigo video library.
+    You need IRIX 4.0.5 level D or higher, and an Indigo video board
+    to use this (SGI's Indigo video board currently only fits in an
+    Entry level Indigo -- not in an XS or XS-24!).  The file is called
+    videosgi.c, and you must compile it as well as video_coder.c.  Use
+    -DINDIGOVIDEO.
+
+    - I've changed the #ifdef VIDEOPIX code in videoconf.c and
+      video_coder.c to surround only the parts that are really
+      specific for the videopix board, and added #ifdef INDIGOVIDEO
+      with appropriate SGI-specific code (the SGI version of the
+      interface doesn't export any SGI-specific types or variables to
+      the upper level -- maybe the PIX interface could be changed
+      similarly?)
+
+    - I turned on the MITSHM option in the Makefile, since the SGI X
+      server supports this.
+
+My changes to existing files are free for all.  The new files are
+copyrighted by my employer, but the copyright is not very restricting
+(similar to INRIA's).
+
+Cheers,
+
+--Guido van Rossum, CWI, Amsterdam <guido@cwi.nl>
+"It's spelled Raymond Luxury-Yacht but it's pronounced
+Throat-Wobbler Mangrove."

@@ -1,0 +1,11 @@
+#
+#---------------------------------------------------------------------------
+# ScreenMachine II BOARD includes and libraries
+#
+SCREENMACHINE_HOME=../common/src
+
+LIB_VIDEO += $(SCREENMACHINE_HOME)/libsm.a
+CARD_INCLUDE += -I$(SCREENMACHINE_HOME)
+CARD_DEF += -DSCREENMACHINE
+OBJ_VIDEO += grab_sm.o video_sm.o
+

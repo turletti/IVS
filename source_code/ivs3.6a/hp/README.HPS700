@@ -1,0 +1,55 @@
+IVS - Version 2.0 for HP9000/7xx machines under HP-UX 8.0x
+
+The current version supports the network transparent audio server architecture 
+by Hewlett Packard. In order to run IVS audio you should have a HP9000/7xx 
+machine with builtin audio or an audio server in your network. The
+video section of IVS currently only supports the HP VideoLive
+board with the corresponding video displaying software (grabber). 
+
+General:
+
+The Makefile for the HP-UX version is located in ./hps700. Please define
+-DHPUX to compile it.
+
+You can only use UNICAST - connections, because hpux don't support any
+MULTICAST - features yet.
+
+Video:
+
+To compile IVS with VideoLive support you should define -DVIDEO_HP_ROPS.
+Everything else should be no problem.
+
+In order to run IVS with video you should start the software included in 
+the HP VideoLive product (/usr/local/rops/bin/grabber) and adjust the 
+parameters which correspond to the connected camera (eg. timing as PAL, NTSC). 
+Afterwards you should simply start ivs. The performance of the video has been 
+measured between two HP9000/750.
+
+		CIF		QCIF
+grabbing:	200		200	ms
+compression:	140-190		40-70	ms
+decompression:	600		300	ms
+
+Further work on this version will be to start a display window by the 
+XV-protocol which will hopefully be finished before Thierry's version 2.1.
+
+Audio:
+
+To compile IVS with hp audio server support you should define -DHPUX. 
+
+If you start ivs on a machine which do not support hp audio but
+you have an audio server in the net, you can set your environment-variable 
+AUDIO to 'audio-server-name':0 or use the option '-as server name'. 
+If you have external speakers, set the environment variable
+SPEAKER to 'e' or 'E'.
+
+Notice: If you don't have an HP audio server in you net, you have
+to define -DNOHPAUDIO in order to get ivs up and running. Due to a
+bug in the hp-audio library the audio calls in 8.0x cannot check
+if there is audio support or not. 
+
+Bugs: If the audioServer is busy, ivs will hang and wait for a connection.
+      To avoid this, start a new audioServer-process (/usr/audio/bin/Aserver)
+      and restart ivs.
+
+ 

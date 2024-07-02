@@ -1,0 +1,11 @@
+#
+#---------------------------------------------------------------------------
+# VigraPix BOARD includes and libraries
+#
+VIGRAPIX_HOME=/usr/local/vigrapix/lib
+
+LIB_VIDEO += $(VIGRAPIX_HOME)/libvigrapix.a
+CARD_INCLUDE += -I$(VIGRAPIX_HOME)
+CARD_DEF += -DVIGRAPIX
+OBJ_VIDEO += videosparc_vigrapix.o grab_vigrapix.o 
+

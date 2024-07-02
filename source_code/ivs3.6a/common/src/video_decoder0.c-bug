@@ -1,0 +1,1376 @@
+/**************************************************************************\
+*          Copyright (c) 1995 INRIA Sophia Antipolis, FRANCE.              *
+*                                                                          *
+* Permission to use, copy, modify, and distribute this material for any    *
+* purpose and without fee is hereby granted, provided that the above       *
+* copyright notice and this permission notice appear in all copies.        *
+* WE MAKE NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY OF THIS     *
+* MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", WITHOUT ANY EXPRESS   *
+* OR IMPLIED WARRANTIES.                                                   *
+\**************************************************************************/
+/**************************************************************************\
+*                                                                          *
+*  File              : video_decoder0.c                                    *
+*  Author            : Thierry Turletti                                    *
+*  Last modification : 1995/3/31                                           *
+*--------------------------------------------------------------------------*
+*  Description :  H.261 video decoder.                                     *
+*                                                                          *
+*--------------------------------------------------------------------------*
+*        Name	        |    Date   |          Modification                *
+*--------------------------------------------------------------------------*
+*   Pierre Delamotte    |  93/3/20  | Color display adding.                *
+*   Andrzej Wozniak     |  93/10/1  | get_bit() macro changes.             *
+\**************************************************************************/
+
+#include "general_types.h"
+#include "protocol.h"
+#include "h261.h"
+#include "huffman.h"
+#define DATA_MODULE
+#include "linked_list.h"
+#include "mc_header.h"
+#include "video_decoder.h"
+
+#ifdef CRYPTO
+#include "ivs_secu.h"
+#endif /* CRYPTO */
+
+#define ORIG_FILTER_LOOP
+/* From athena.c */
+extern Widget value_fps, value_kbps, value_loss;
+
+/*----------------------------------------------------------------------*/
+
+void ToggleDecoderDebug(null)
+     int null;
+{
+  DEBUG_MODE = (DEBUG_MODE ? FALSE : TRUE);
+  if(DEBUG_MODE)
+    fprintf(stderr, "video_decoder: Debug mode turned on\n");
+  else
+    fprintf(stderr, "video_decoder: Debug mode turned off\n");
+  signal(SIGUSR1, ToggleDecoderDebug);  
+}
+
+void ToggleDecoderLoss(null)
+     int null;
+{
+  LOSS_MODE = (LOSS_MODE ? FALSE : TRUE);
+  if(LOSS_MODE)
+    fprintf(stderr, "video_decoder: Loss mode turned on\n");
+  else
+    fprintf(stderr, "video_decoder: Loss mode turned off\n");
+  signal(SIGUSR2, ToggleDecoderLoss);  
+}
+
+/*----------------------------------------------------------------------*/
+
+BOOLEAN decode_bloc_8x8(pbit_state, bloc, state, colmax, inter)
+    TYPE_dec_bit_state *pbit_state;
+    int bloc [][8];
+    etat *state;
+    int *colmax; /* bloc[][colmax+1] = 0 */
+    BOOLEAN inter; /* True if INTER mode */
+
+  {
+    int x, new_x; /* previous and new state */
+    int run, level, result;
+    int temp, new_bit, negatif;
+    int col = 0;
+    int maxcol=0;
+    register int  k;
+    register int  jj;
+    register int chaine_count;
+    register u_int byte4_codee;
+    register u_char *ptr_chaine_codee;
+    register u_char *ptrZAG = &ZAG[0];
+    register u_char *ptrZIG = &ZIG[0];
+
+    static BOOLEAN FIRST=TRUE;
+    static int block_size;
+    TYPE_dec_bit_state bit_state;
+
+    if(FIRST){
+      block_size = sizeof(int) << 6;
+      FIRST = FALSE;
+    }
+    k = 0; /* Next coefficient block. */
+    
+    GET_bit_state((*pbit_state), ptr_chaine_codee, byte4_codee, chaine_count,
+		  jj); 
+
+    bzero((char *)bloc, block_size);
+    if(inter){
+        if(temp = get_bit(ptr_chaine_codee,jj)){ 
+	/* Special case: First coeff starts with 1
+	*  So, run=0 and abs(level)=1.
+	*/
+        if(get_bit(ptr_chaine_codee,jj)){
+	  /* level = -1 */
+  	  bloc[0][0] = -1;
+        }else{
+	  /* level = +1 */
+	  bloc[0][0] = 1;
+        }
+	temp = get_bit(ptr_chaine_codee,jj);
+	k = 1; ptrZAG++;
+      }
+    }else{ /* INTRA mode and CC */
+      get_n_bit(ptr_chaine_codee,jj,8,level)
+      level = (level==255 ? 128 : level);
+      bloc[0][0] = level;
+      temp = get_bit(ptr_chaine_codee,jj);
+      k =1; ptrZAG++;
+    }
+    new_bit = temp;
+    new_x = x = 0;
+   goto first;
+
+/*-----------------------------------------------------------*/
+    do{
+
+      new_x = 0;
+      do{
+	x = new_x;
+	new_bit = get_bit(ptr_chaine_codee,jj);
+first:
+	new_x = state[x].bit[new_bit];
+      }while(new_x > 0);
+
+      if((result=state[x].result[new_bit]) > 0){
+	/* It is a Variable Length Code. */
+	run = result >> 4;
+	level = result & 0x0f;
+	k += run; ptrZAG+=run;
+	if((k > 63) || (new_x < 0)){
+	  /* Bit error detected */
+#ifdef DEBUG
+	  fprintf(stderr, "decode_bloc_8x8: Bit error detected\n");
+#endif	  
+	  return(FALSE);
+	}
+	if((col=*(ptrZAG)) > maxcol)
+	    maxcol=col;
+	/* Level's sign. */
+	if(get_bit(ptr_chaine_codee,jj))
+	    bloc[ptrZIG[k]][col] = -level;
+	else
+	    bloc[ptrZIG[k]][col] = level;
+	k ++; ptrZAG++;
+	continue;
+      }else{
+	if(result == ESCAPE){
+	  /* It is a fixed length code -> 20 bits. */
+	  /* 6 bits(ESCAPE) + 6 bits(RUN) + 8 bits(LEVEL) */
+	  run = 0;
+	  level = 0;
+
+	  get_n_bit(ptr_chaine_codee,jj,6,run)
+	  negatif = get_bit(ptr_chaine_codee,jj);
+
+	  get_n_bit(ptr_chaine_codee,jj,7,level)
+	  if(negatif)
+	    level -= 128;
+	  k += run;
+	  if(k > 63){
+	    /* Bit error detected */
+#ifdef DEBUG
+	    fprintf(stderr, "decode_bloc_8x8: Bit error detected\n");
+#endif	  
+	    return(FALSE);
+	  }
+	  ptrZAG+=run;
+	  if((col=*ptrZAG) > maxcol)
+	    maxcol=col;
+	  bloc[ptrZIG[k]][col] = level;
+	  k ++; ptrZAG++;
+	  continue;
+	}else{
+	  if(result == EOB){
+	    break;
+	  }else{
+	    /* Bit error detected */
+#ifdef DEBUG
+	    fprintf(stderr, "decode_bloc_8x8: Bit error detected\n");
+#endif
+	    return(FALSE);
+	  }
+	}
+      }
+    }while(1);
+
+    *colmax=maxcol;
+    if(maxcol > 7){
+      /* Bit error detected */
+#ifdef DEBUG
+      fprintf(stderr, "decode_bloc_8x8: Bit error detected\n");
+#endif
+      return(FALSE);
+    }
+    PUT_bit_state((*pbit_state), ptr_chaine_codee, byte4_codee, chaine_count,
+		  jj); 
+    return(TRUE);
+  }
+
+/*----------------------------------------------------------------------*/
+
+#ifdef ORIG_FILTER_LOOP
+
+void filter_loop(block_in, block_out, L_col)
+    u_char *block_in, *block_out;
+    int L_col;
+  {
+    u_char memo[64];
+    int offset=L_col-8;
+
+    /* Sum on raws */
+      {
+	register int j, k;
+	register u_char *r, *b1, *b2, *b3;
+
+	bcopy((char *)block_in, (char *)memo, 8);
+	b1 = block_in;
+	b2 = b1 + L_col;
+	b3 = b2 + L_col;
+	r = &(memo[8]);
+	for(k=0; k<6; k++){
+	  for(j=0; j<8; j++)
+	    *r++ = (u_char)((int)((*b1++) + ((int)(*b2++)<<1) + (*b3++)) >> 2);
+	  b1 += offset;
+	  b2 += offset;
+	  b3 += offset;
+	}
+	bcopy((char *)b2, (char *)&(memo[56]), 8);
+      }
+    
+    /* Sum on columns */
+      {
+	register int l;
+	register u_char *r, *b1;
+
+	r = block_out;
+	b1 = memo;
+	for(l=0; l<8; l++){
+	  register int a, b, c;
+
+	  *r++ = a = *b1++;
+	  a += (b = *b1++);
+	  b += (c = *b1++);
+	  *r++ = (a+b)>>2;
+	  c += (a = *b1++);
+	  *r++ = (b+c)>>2;
+	  a += (b = *b1++);
+	  *r++ = (c+a)>>2;
+	  b += (c = *b1++);
+	  *r++ = (a+b)>>2;
+	  c += (a = *b1++);
+	  *r++ = (b+c)>>2;
+	  a += (b = *b1++);
+	  *r++ = (c+a)>>2;
+	  *r++ = b;
+	  r += offset;
+	}
+      }
+    return;
+  }
+
+#else
+
+void filter_loop(block_in, block_out, L_col)
+    u_char *block_in, *block_out;
+    int L_col;
+  {
+    int memo[64];
+    int offset=L_col-8;
+
+    /* Sum on raws */
+      {
+	register int j, k;
+	register u_char *b1, *b2, *b3;
+	register int *r;
+
+	/* bcopy((char *)block_in, (char *)memo, 8); */
+	b1 = block_in;
+	b2 = b1 + L_col;
+	b3 = b2 + L_col;
+	for (j = 0; j < 8; memo[j++] = (*block_in++ << 2));
+	r = &(memo[8]);
+	for(k=0; k<6; k++){
+	  for(j=0; j<8; j++)
+	    *r++ = ((*b1++) + ((int)(*b2++)<<1) + (*b3++));
+	  b1 += offset;
+	  b2 += offset;
+	  b3 += offset;
+	}
+	/*bcopy((char *)b2, (char *)&(memo[56]), 8);*/
+	for (j = 56; j < 64; memo[j++] = (*b2++ << 2));
+      }
+    
+    /* Sum on columns */
+      {
+	register int l;
+	register int *b1;
+	u_char *r;
+
+	r = block_out;
+	b1 = memo;
+	for(l=0; l<8; l++){
+	  register int a, b, c;
+
+	  *r++ = (((a = *b1++) + 2) >> 2);
+	  a += (b = *b1++);
+	  b += (c = *b1++);
+	  *r++ = (a+b+8)>>4;
+	  c += (a = *b1++);
+	  *r++ = (b+c+8)>>4;
+	  a += (b = *b1++);
+	  *r++ = (c+a+8)>>4;
+	  b += (c = *b1++);
+	  *r++ = (a+b+8)>>4;
+	  c += (a = *b1++);
+	  *r++ = (b+c+8)>>4;
+	  a += (b = *b1++);
+	  *r++ = (c+a+8)>>4;
+	  *r++ = ((b+2) >> 2);
+	  r += offset;
+	}
+      }
+    return;
+  }
+
+#endif
+
+/*----------------------------------------------------------------------*/
+
+BOOLEAN PacketReceived(sock)
+     int sock;
+{
+  static struct timeval tim_out;
+  static int mask;
+  BOOLEAN FIRST=TRUE;
+
+  if(FIRST){
+    tim_out.tv_sec = 0;
+    tim_out.tv_usec = 100000; /* 100 ms delay */
+    mask = 1 << sock;
+    FIRST = FALSE;
+  }
+
+  return(select(sock+1, (fd_set *)&mask, (fd_set *)0, (fd_set *)0, &tim_out));
+}
+
+/*----------------------------------------------------------------------*/
+
+#ifdef INPUT_FILE
+
+u_int ReadBuffer(sock, pbit_state)
+    int sock;
+     TYPE_dec_bit_state *pbit_state;
+{
+    static BOOLEAN FIRST=TRUE;
+    static int ltot;
+    static FILE *file;
+    static u_char buffer[T_MAX];
+    int lr=0;
+    static TYPE_dec_bit_state bit_state;
+    static look = 0;
+
+
+    if(look){
+      if(pbit_state != (TYPE_dec_bit_state *)0){
+	look = 0;
+	*pbit_state = bit_state;
+      }
+      return bit_state.byte4_codee;
+    }
+
+    if(FIRST){
+      if((file = fopen(filename, "r")) == NULL){
+	perror("fopen input file");
+	exit(1);
+      }
+      MV_ENCODED = TRUE;
+      NACK_FIR_ALLOWED = FALSE;
+      COLOR_ENCODED = TRUE;
+      SUPER_CIF = FALSE;
+      ltot = 0;
+      encCOLOR = TRUE;
+      FIRST = FALSE;
+/*      *buf = buffer; */
+    }
+
+    while (CONTEXTEXIST && XtAppPending (dec_appCtxt))
+      XtAppProcessEvent (dec_appCtxt, XtIMAll);	
+
+    if((lr = fread((char *)buffer, 1, 400, file)) <= 0){
+      printf("End of file, %d bytes decoded\n", ltot);
+      exit(0);
+    }
+    ltot += lr;
+    {
+      u_char * ptr_chaine_codee;
+      u_int byte4_codee;
+      int chaine_count;
+      int rj;
+      int len;
+      long last_adr;
+      long first_adr;
+      long tail;
+      long head;
+      int ll, ii, jj;
+      u_char *pt_buf;
+
+      ll = lr;
+      ii = jj = 0;
+      pt_buf = buffer;
+      first_adr = (long)(pt_buf+ii);
+      last_adr = (long)(pt_buf+ll);
+      head = first_adr & 0x3;
+      tail = last_adr & 0x3;
+      first_adr &= ~0x3;
+      last_adr &= ~0x3;
+      len = ll - ii;
+      ptr_chaine_codee = (u_char *)first_adr;
+
+      if(first_adr == last_adr){
+	chaine_count = 4;
+	LOAD_CODEn(ptr_chaine_codee, (head+len));
+	byte4_codee <<= (8*head+jj);
+	rj = len*8;
+      }else{
+	chaine_count = len + head - 2*tail;
+	LOAD_CODE(ptr_chaine_codee);
+	byte4_codee <<= (8*head + jj);
+	rj = 32 - (8*head + jj);
+      }
+      PUT_bit_state(bit_state, ptr_chaine_codee,
+			byte4_codee, chaine_count, rj);
+      if(pbit_state != (TYPE_dec_bit_state *) 0){
+	look = 0;
+	*pbit_state = bit_state;
+      }else
+	look = 1;
+	return byte4_codee;
+    }
+
+}
+
+#else
+
+/*----------------------------------------------------------------------*/
+
+u_int ReadBuffer(sock, pbit_state)
+     int sock;
+     TYPE_dec_bit_state *pbit_state;
+{
+
+  u_char *pt_buf;
+  int ii;
+  int jj;
+  int ll;
+  
+  static struct sockaddr_in addr_from;
+  static int fromlen, lr;
+  static int mask0, mask_pipe, fmax;
+  static u_short packet_expected;
+  static u_char SMASK[8]={0x00, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02};
+  static BOOLEAN FIRST=TRUE;
+  static int nb_requests=0;
+  static BOOLEAN E=FALSE;
+  static BOOLEAN RESYNCHRO=FALSE;
+  static pckt_tot=0; /* STAT: received packets */
+  static pckt_lost=0; /* STAT: lost packets */
+  static cpckt_tot=0; /* STAT: received packets in the current interval */
+  static cpckt_lost=0; /* STAT: lost packets in the current interval */
+  static pckt_aos=0; /* STAT: out of sequence packets */
+  static int nb_memo_packet; /* Number of memorized packets */
+  static int nb_free_packet; /* Number of free elements in the list */
+  static int nb_max_memo=4;  /* Maximum number of saved packets */
+  static MEMBUF *pt_free_first, *pt_free_last;
+  static MEMBUF *pt_memo_first, *pt_memo_last;
+  static u_short min_memo_seq; /* First packet saved (smallest) */
+  int lpipe, mask, Ebit, Sbit;
+  u_char command[2000];
+  u_int32 *pt;
+  BOOLEAN S, SYNC, ERROR;
+  static MEMBUF *packet;
+  static u_char *buf;
+  static TYPE_dec_bit_state bit_state;
+  static look = 0;
+  static Mc_RxState *mcRxState;
+  u_short identifier=0;
+  static int B8;
+  static u_short last_ts_sec, last_ts_usec;
+  static int nb_bytes=0;
+  static struct sockaddr_in name;
+  int diff_sec, diff_usec;
+  double delta_s;
+  u_int type;
+  rtp_hdr_t *h;
+  rtp_t *r;
+#ifdef LOG_STAT	  
+  static int lost_packets=0;
+  int interval;
+  static int last_seq;
+#endif	  
+  
+  if(look){
+    if(pbit_state != (TYPE_dec_bit_state *)0){
+      look = 0;
+      *pbit_state = bit_state;
+    }
+    return bit_state.byte4_codee;
+  }
+  if(FIRST){
+    /*
+    * If this is the first time we enter this routine
+    * set up the mask for the select call, and signals for turning on 
+    * debugging and loss mode.
+    * Initialise the linked list buffer for the saved packets (of size 4)
+    * If we are rtp bridging we're setting a fixed offset on the rtp header:-(
+    * We're initialising the mc state
+    */
+    
+    last_RT_displayed = RT; /* different to RT */
+    mask_pipe = 1 << fd_pipe;
+    mask0 = mask_pipe | (1 << sock);
+    fmax=(fd_pipe>sock ? fd_pipe+1 : sock+1);
+    fromlen = sizeof(addr_from);
+    signal(SIGUSR1, ToggleDecoderDebug);
+    signal(SIGUSR2, ToggleDecoderLoss);
+    InitMemBuf(memo_packet, &pt_free_first, &pt_free_last, &pt_memo_first,
+	       &pt_memo_last, nb_max_memo, &nb_free_packet, &nb_memo_packet);
+    packet = CreatePacket(0, 0, &pt_free_first,
+			  &pt_free_last, &nb_free_packet);
+    buf = (u_char *) packet->buf;
+    if(host_identifier){
+      /* There is a SSRSC in each valid packet */
+      /* buf[B8] is the first byte of the H.261 RTP header */
+      B8 = 12;
+    }else{
+      B8 = 8; 
+    }
+
+    /* initialise the receive state machine */
+    mcRxState = (Mc_RxState *) mc_initRecv(mc_lossMeter, mc_initLossMeter);
+  }
+  
+#ifndef RECVD_ONLY
+  if(dec_depth && E && (NG==NG_MAX)){
+    /* Display the image without waiting for the next packet
+    * if we have a full set of GoBs, and we've just read the last data
+    * in the last GoB and there is a window mapped 
+    */
+    if(!SUPER_CIF || (SUPER_CIF && cif_number == 3)){
+#ifndef SAVE_FILE	
+      show(dec_dpy, dec_win, ximage);
+      nb_frame ++;
+      last_RT_displayed = RT;
+#else
+      if(CIF_MODE){
+	if(fwrite((char *) Y_pt, 1, dim_image, F_decoded_file) !=
+	   dim_image){
+	  perror("fwrite decoded_file");
+	}
+	printf("newRT: %d, RT1: %d\n", RT, last_RT_displayed);
+      }else{
+	register int l;
+	int ltemp=0;
+	for(l=0; l<L_lig; l++){
+	  if(fwrite((char *)(Y_pt+ltemp), 1, L_col, F_decoded_file) !=
+	     L_col)
+	    perror("fwrite decoded_file");
+	  ltemp += 352;
+	}
+      }
+      fflush(F_decoded_file);
+      cpt_image ++;
+#endif
+    }
+  }
+#endif
+  
+  
+  if(PACKET_LOST && NACK_FIR_ALLOWED){
+    /* Packet loss without NG missing --> all the image is lost.
+    *  Here, ts_sec == old_ts_sec.
+    */
+    if(TRYING_RESYNC)
+      SendNACK(&addr_coder, len_addr_coder, TRUE, NG, NG, format,
+	       ts_sec, ts_usec);
+    else{
+      SendNACK(&addr_coder, len_addr_coder, TRUE, 1, NG_MAX, format,
+	       ts_sec, ts_usec);
+    }
+  }
+  PACKET_LOST = FALSE;
+
+  /*
+  * Main loop which we go around until we locate a packet with data we
+  * can decode
+  */
+     
+  do{
+    ERROR = FALSE;
+/*
+**  Manage X events
+*/
+    while (CONTEXTEXIST && XtAppPending (dec_appCtxt)){
+      XEvent evt ;
+      
+      XtAppNextEvent (dec_appCtxt, &evt);
+      switch (evt.type){
+      case UnmapNotify :
+	if (evt.xunmap.window == dec_icon) {
+	  if(NACK_FIR_ALLOWED)
+	    SendFIR(&addr_coder, len_addr_coder);
+	  ICONIC_DISPLAY = FALSE ;
+	}
+	break ;
+      case MapNotify :
+	if ( evt.xmap.window == dec_win ) {
+	  ICONIC_DISPLAY = FALSE ;
+	  break ;
+	}
+	if (evt.xmap.window == dec_icon) {
+	  ICONIC_DISPLAY = TRUE ;
+	  build_icon_image(dec_icon, size, Y_pt, Cb_pt, Cr_pt,
+			   (SUPER_CIF ? L_Y : L_Y_DIV2),
+			   L_col, L_lig, TRUE);
+	}
+	break ;
+      } /* hctiws evt.type */
+      XtDispatchEvent (&evt) ;
+    } /* elihw XtAppPending */
+
+    /* Wait on the pipe and the socket */
+    mask = mask0;
+    while(select(fmax, (fd_set *)&mask, (fd_set *)0, (fd_set *)0, 
+		 (struct timeval *)0) <= 0){
+      if(errno !=  EINTR)
+	perror("VideoDecode-ReadBuffer-select");
+    }
+    /* Is there data on the pipe ? */
+    if(mask & mask_pipe){
+      if((lpipe=read(fd_pipe, (char *)command, 2000)) < 0){
+	exit(1);
+      }else{
+	int l=0;
+	register int n;
+	
+	do{
+	  switch(command[l]){
+	  case PIP_QUIT:
+	    if(STAT_MODE){
+	      if(pckt_tot==0)
+		pckt_tot = 1;
+	      fprintf(stderr, "Packets lost %d/%d, %2.2f %%\n",
+		      pckt_lost, pckt_tot, 100.0*pckt_lost/(double)pckt_tot);
+	      fprintf(stderr, "Packets out of sequence %d/%d, %2.2f %%\n",
+		      pckt_aos, pckt_tot, 100.0*pckt_aos/(double)pckt_tot);
+	      fclose(F_dloss);
+	    }
+	    exit(1);
+	  case PIP_TUNING:
+	    l++;
+	    for(n=0; n<256; n++)
+	      map_lut[n] = (u_char) dec_colors[command[l+n]].pixel;
+	    l += n;
+	    break;
+#ifdef CRYPTO
+	  case PIP_ENCRYPTION:
+	    current_method = (int) command[++l];
+	    len_key = (int) command[++l];
+	    for(n=0; n<len_key; n++)
+	      s_key[n] = command[++l];
+	    l++;
+#ifdef DEBUG_CRYPTO
+	    test_key("decoderPIPHandle");
+#endif
+	    break;
+#endif /* CRYPTO */
+	  default:
+	    fprintf(stderr, 
+	       "video_decode-ReadBuffer: Received an unknown PIP command %d\n",
+		    command[l]);
+	    l ++;
+	    break;
+	  }
+	}while(l < lpipe);
+      }
+    } /* Pipe reading */
+    if(TRYING_RESYNC && (AFTER_GBSC==FALSE)){
+      if(DEBUG_MODE)
+	fprintf(stderr, "****Resynchronization failed, re-padding..\n");
+      pt_buf = buffer_resynchro;
+      ii = 0;
+      jj = 0;
+      TRYING_RESYNC = TRUE;
+      ll = 10;
+      goto e_return;
+    }
+    if(RESYNCHRO){
+      /* After GBSC and a buffer is already saved */
+#ifdef DEBUG
+      fprintf(stderr, "%d bytes are restored\n", lr);
+#endif
+      /* buf unchanged */
+      lr = packet->len;
+      RESYNCHRO = FALSE;
+      break;
+    }else{
+      if(nb_memo_packet == 0){
+	/* If we ain't got no remembered data, get some new */
+	if((lr=recvfrom(sock, (char *)buf, T_MAX, 0, 
+			(struct sockaddr *)&addr_from, &fromlen)) < 0){
+	  perror("VideoDecode-ReadBuffer-recvfrom");
+	  continue;
+	}
+
+#ifdef CRYPTO
+	if(ENCRYPTION_ENABLED()){
+#ifdef DEBUG_CRYPTO
+	    test_key("video_decoder");
+#endif
+	    lr = method[current_method].uncrypt_rtp(buf, lr, s_key, len_key, 
+						    buf);
+	}
+#endif /* CRYPTO */
+
+	if(LOSS_MODE){
+	  if((rand() % 0x0f) == 0x04){
+	    nb_lost ++;
+	    continue; /* 1/16 lost */
+	  }
+	}
+	
+	if(ICONIC_DISPLAY) 
+	  continue;
+	if(addr_from.sin_addr.s_addr != host_sin_addr_from){
+	  continue;
+	}
+#ifndef PC
+	/* It seems that this connect does not work on Linux, to fix... */
+	else{
+	  if(!name.sin_addr.s_addr){
+	    /* 
+	     * It is the first time that we receive something interesting, 
+	     * try now to connect to the distant coder.
+	     */
+	    name.sin_addr.s_addr = host_sin_addr_from;
+	    name.sin_family = AF_INET;
+	    name.sin_port = addr_from.sin_port;
+
+	    if(connect(sock, (struct sockaddr *)&name, sizeof(name)) < 0){
+	      perror("connect failed");
+	    }
+	  }
+	}
+#endif /* PC */
+	/* Start parsing the packet */
+	h = (rtp_hdr_t *) buf;
+	B8 = 8;
+	if(h->p){
+	  /* There is a RTP option in the video packet */
+	  pt = (u_int32 *) (h+1);
+	  ERROR = FALSE;
+	  do{
+	    r = (rtp_t *) &buf[B8];
+	    pt += r->generic.length; /* point to end of option */
+	    if((((char *)pt - (char *)h) > lr) || (r->generic.length == 0)){
+	      if(DEBUG_MODE){
+		fprintf(stderr, "ParseRTCP: Invalid length field");
+	      }
+	      ERROR = TRUE;
+	      break;
+	    }
+	    switch(type = r->generic.type) {
+	      /*
+	       * Add in the necessary code to detect MC rx returns and for
+	       * processing them
+	       */
+	    case RTP_APP: 
+	      if(ntohl(r->app_mcct.name) != RTP_APP_MCCT_VAL) {
+		if(DEBUG_MODE)
+		  fprintf(stderr,
+	        "ParseRTCP with no remembered packets: Invalid APP field\n");
+		ERROR=TRUE;
+		break;
+	      }
+	      /* 
+	       * Hand it off to the mccp processing machinery, with necessary
+	       * state and relevant stuff from rtp header
+	       */
+	      if(addr_coder.sin_port)
+		mc_recv(mcRxState, h, r, &addr_coder, len_addr_coder);
+	      B8 += sizeof(app_mcct_t);
+	      break;
+	      
+	    case RTP_SSRC:
+	      identifier = ntohs(r->ssrc.id);
+	      if(identifier != host_identifier){
+		if(DEBUG_MODE){
+		  fprintf(stderr, "identifier: %d, host_identifier: %d\n",
+			  identifier, host_identifier);
+		}
+		ERROR=TRUE; /* wrong identifier */
+	      }
+	      B8 += 4;
+	      break;
+	      
+	    default:
+	      if(DEBUG_MODE){
+		fprintf(stderr,
+			"ReadBuffer wierd option: type%d, length=%d\n",
+			r->generic.type, r->generic.length);
+	      }
+	      ERROR=TRUE;
+	      break;
+	    }
+	  }while(!r->generic.final && (!ERROR));
+	  if(ERROR)
+	    continue;
+	} /* RTP option included in the video packet */
+	nb_bytes += lr;
+	pckt_tot ++;
+	cpckt_tot ++;
+	sequence_number = ntohs(h->seq);
+	if(STAT_MODE){
+#ifndef LOG_STAT
+	  fprintf(F_dloss, "no %d received\n", sequence_number);
+	  fflush(F_dloss);
+#endif	  
+	}
+      }else{
+	/* nb_memo_packet <> 0 */
+	
+	if(packet_expected == min_memo_seq){
+	  FreePacket(packet, &pt_free_first, &pt_free_last, &nb_free_packet);
+	  packet = TakeOutPacket(&pt_memo_first, &pt_memo_last,
+				 &min_memo_seq, &nb_memo_packet);
+	  buf = (u_char *)packet->buf;
+	  lr = packet->len;
+	  if(DEBUG_MODE){
+	    PrintList(stderr, pt_memo_first, "memo_packet", nb_memo_packet);
+	  }
+	}else{
+	  if((lr=recvfrom(sock, (char *)buf, T_MAX, 0, 
+			  (struct sockaddr *)&addr_from, &fromlen)) < 0){
+	    perror("VideoDecode-ReadBuffer-recvfrom");
+	    continue;
+	  }
+#ifdef CRYPTO
+	  if(ENCRYPTION_ENABLED()){
+#ifdef DEBUG_CRYPTO
+	    test_key("video_decoder");
+#endif
+	    lr = method[current_method].uncrypt_rtp(buf, lr, s_key, len_key, 
+						    buf);
+	  }
+#endif /* CRYPTO */
+	  
+	  if(addr_from.sin_addr.s_addr != host_sin_addr_from){
+	    continue;
+	  }
+#ifndef PC
+	  /* It seems that this connect does not work on Linux, to fix... */
+	  else{
+	    if(!name.sin_addr.s_addr){
+	      /* 
+	       * It is the first time that we receive something interesting, 
+	       * try now to connect to the distant coder.
+	       */
+	      name.sin_addr.s_addr = host_sin_addr_from;
+	      name.sin_family = AF_INET;
+	      name.sin_port = addr_from.sin_port;
+
+	      if(connect(sock, (struct sockaddr *)&name, sizeof(name)) < 0){
+		  perror("connect failed");
+	      }
+	    }
+	  }
+#endif /* PC */
+
+	  /* Start parsing the packet */ 
+	  h = (rtp_hdr_t *) buf;
+	  B8 = 8;
+	  if(h->p){
+	    /* There is a RTP option in the video packet */
+	    pt = (u_int32 *) (h+1);
+	    ERROR = FALSE;
+	    do{
+	      r = (rtp_t *) &buf[B8];
+	      pt += r->generic.length; /* point to end of option */
+	      if((((char *)pt - (char *)h) > lr) || (r->generic.length == 0)){
+		if(DEBUG_MODE){
+		  fprintf(stderr, "ParseRTCP: Invalid length field");
+		}
+		ERROR = TRUE;
+		break;
+	      }
+	      switch(type=r->generic.type) {
+		/*
+		 * Add in the necessary code to detect MC rx returns and for
+		 * processing them
+		 */
+	      case RTP_APP: 
+		/* ignore anything except for the MCCP transmit option */
+		if(ntohl(r->app_mcct.name) != RTP_APP_MCCT_VAL) {
+		  if(DEBUG_MODE){
+		    fprintf(stderr, "ParseRTCP: Invalid APP field\n");
+		    fprintf(stderr, "app_mcc.t.name: %x\n", r->app_mcct.name);
+		  }
+		  ERROR=TRUE;
+		  break;
+		}
+		/* Hand it off to the mccp processing machinery, with necessary
+		 * state and relevant stuff from rtp header
+		 */
+		if(addr_coder.sin_port)
+		  mc_recv(mcRxState, h, r, &addr_coder, len_addr_coder);
+		/* increment the pointer */
+		B8 += sizeof(app_mcct_t);
+		break;
+	      case RTP_SSRC:
+		identifier = ntohs(r->ssrc.id);
+		if(identifier != host_identifier){
+		  if(DEBUG_MODE){
+		    fprintf(stderr, "identifier: %d, host_identifier: %d\n",
+			    identifier, host_identifier);
+		  }
+		  ERROR=TRUE; /* wrong identifier */
+		  break;
+		}
+		B8 += 4;
+		break;
+		
+	      default:
+		if(DEBUG_MODE){
+		  fprintf(stderr,
+			  "ReadBuffer wierd option: type%d, length=%d\n",
+			  r->generic.type, r->generic.length);
+		}
+		ERROR = TRUE;
+		break;
+	      }
+	    }
+	    while(!r->generic.final && (!ERROR));
+	    if(ERROR)
+	      continue;
+	  } /* RTP option included in the video packet */
+	  nb_bytes += lr;
+	  pckt_tot ++;
+	  cpckt_tot ++;
+	  sequence_number = ntohs(h->seq);
+	  if(STAT_MODE){
+#ifndef LOG_STAT	    
+	    fprintf(F_dloss, "no %d received\n", sequence_number);
+	    fflush(F_dloss);
+#endif	    
+	  }
+	}
+      }
+    } /* ! RESYNCHRO */
+    
+    h = (rtp_hdr_t *) buf;
+
+    /* We now move onto point to the h261 stuff */
+    r = (rtp_t *) &buf[B8];
+    if(h->ver != RTP_VERSION){
+      if(DEBUG_MODE)
+	fprintf(stderr, "Bad RTP version %d\n", h->ver);
+      continue;
+    }
+    if(h->format != RTP_H261_CONTENT){
+      if(DEBUG_MODE)
+	fprintf(stderr, "Bad RTP content type %d\n", h->format);
+      continue;
+    }
+    SYNC = h->s;
+    sequence_number = ntohs(h->seq);
+    if(SUPER_CIF) 
+      size = CIF4_SIZE;
+    if(FIRST){
+#ifndef SAVE_FILE
+      NACK_FIR_ALLOWED = r->h261.F;
+#else
+      NACK_FIR_ALLOWED = TRUE;
+#endif
+      encCOLOR = COLOR_ENCODED = r->h261.C;
+
+      SUPER_CIF = r->h261.size > 1 ? TRUE : FALSE;
+      FULL_INTRA_REQUEST = NACK_FIR_ALLOWED;
+      if(FULL_INTRA_REQUEST == FALSE){
+	TRYING_RESYNC= TRUE;
+	packet_expected = sequence_number;
+      }
+    }else{
+      old_ts_sec = ts_sec;
+      old_ts_usec = ts_usec;
+    }
+    
+    FULL_INTRA = r->h261.I;
+
+    /* 
+    * Used to send off a request for a Full Intra at this point 
+    * if need be, but that's now decided by the transmitter ????
+    */
+    
+    if(FULL_INTRA_REQUEST){
+      if(!FULL_INTRA){
+	if(nb_requests % 10 == 0){
+	  if(DEBUG_MODE){
+	    fprintf(stderr, "video_decoder: sending FIR\n");
+	  }
+	  SendFIR(&addr_coder, len_addr_coder);
+	}
+	nb_requests ++;
+	continue;
+      }else{
+	FULL_INTRA_REQUEST = FALSE;
+	packet_expected = nextp(sequence_number);
+	break;
+      }
+    }else{
+      if(FIRST){
+	/* The first packet to decode must have Sbit=1 */
+	if(r->h261.S == 0){
+	  packet_expected = nextp(sequence_number);
+	  continue;
+	}
+      }
+      /* if the sequence number is as expected then decode this packet */
+      if(packet_expected == sequence_number){
+	packet_expected = nextp(sequence_number);
+#ifdef LOG_STAT
+	{
+	  static BOOLEAN FIRST=TRUE;
+
+	  if(FIRST){
+	    last_seq = sequence_number;
+	    FIRST=FALSE;
+	  }
+	}
+	if((interval = (sequence_number - last_seq + 65536) % 65536)
+	   >= 50){
+	  fprintf(F_dloss, "%d\t%f\n", sequence_number,
+		  100.0*lost_packets/(float)interval);
+	  fflush(F_dloss);
+	  last_seq = sequence_number;
+	  lost_packets = 0;
+	}
+#endif	
+	break;
+      }else{
+	
+	if(old_packet((int)sequence_number, (int)packet_expected)){
+	  if(STAT_MODE){
+	    pckt_aos ++;
+	  }
+	  continue;
+	}
+
+	if(DEBUG_MODE) {
+	  fprintf(stderr, "saving packet %d\n",
+		  sequence_number);
+	}
+	
+	/*
+        * Save this packet into the list.
+        */
+	packet->sequence_number = sequence_number;
+	packet->len = lr;
+	if(!InsertPacket(&pt_memo_first, &pt_memo_last, packet,
+			 &min_memo_seq, &nb_memo_packet)){
+	  if(nb_memo_packet == nb_max_memo)
+	    printf("impossible!!! nb_memo_packet = nb_max_memo = %d\n",
+		   nb_memo_packet);
+	  if(DEBUG_MODE){
+	    fprintf(stderr, "duplicated packet %d\n",
+		    packet->sequence_number);
+	  }
+	  packet->sequence_number = packet->len = 0;
+	  continue;
+	}else{
+	  if(nb_free_packet >= 1){
+	    packet = CreatePacket(0, 0, &pt_free_first,
+				  &pt_free_last, &nb_free_packet);
+	    buf = (u_char *)packet->buf;
+	    continue;
+	  }
+	}
+
+	/* 
+	* We fall through to here if the packet buffers are full.
+	* We decide that this means we have lost data for the decoder
+	*/
+
+	if(DEBUG_MODE){
+	  PrintList(stderr, pt_memo_first, "memo_packet", nb_memo_packet);
+	}
+
+	if(nb_memo_packet < nb_max_memo){
+	  printf("impossible nb_memo_packet=%d < nb_max_memo=%d\n",
+		 nb_memo_packet, nb_max_memo);
+	  continue;
+	}else{
+	  /* The list is full, packet and buf are void,
+	  * take out the packet following the hole.
+	  */
+	  
+	  int nb_packet_lost;
+	  
+	  nb_packet_lost = (int)(min_memo_seq - packet_expected + 65536) %
+	    65536;
+	  pckt_lost += nb_packet_lost;
+	  cpckt_lost += nb_packet_lost;
+#ifdef LOG_STAT
+	  lost_packets += nb_packet_lost;
+#endif	  
+	  pckt_tot += nb_packet_lost;
+	  cpckt_tot += nb_packet_lost;
+	  if((packet = TakeOutPacket(&pt_memo_first, &pt_memo_last,
+				     &min_memo_seq, &nb_memo_packet)) == NIL){
+	    if(DEBUG_MODE){
+	      fprintf(stderr, "Could not take out packet\n");
+	    }
+	  }
+	  if(STAT_MODE){
+#ifndef LOG_STAT
+	    if(nb_packet_lost == 1)
+	      fprintf(F_dloss, "** tot 1: %d lost\n", packet_expected);
+	    else
+	      fprintf(F_dloss, "** tot %d: %d to %d lost\n", nb_packet_lost,
+		      packet_expected, (int)(packet_expected + nb_packet_lost +
+					     65535) % 65536);
+	    fflush(F_dloss);
+#endif	  
+	  }
+	  if(DEBUG_MODE){
+	    PrintList(stderr, pt_memo_first, "memo_packet", nb_memo_packet);
+	  }	      
+	  buf = (u_char *) packet->buf;
+	  sequence_number = packet->sequence_number;
+	  packet_expected = nextp(sequence_number);
+	  lr = packet->len;
+	  
+	  /* SYNC = (buf[1] & 0x20 ? TRUE : FALSE); */
+	  r = (rtp_t *) &buf[B8];
+	  FULL_INTRA = r->h261.F;
+	  
+	}
+	
+	PACKET_LOST = TRUE;
+	/* 
+	* We have now lost a packet ...
+	* We have to resynchronise the decoder with the input stream
+	*/
+	r = (rtp_t *) &buf[B8];
+	if(E == FALSE){
+	  /* The previous decoded packet was only a part of GOB.
+	  *  We must now synchronize with start of the next GOB.
+	  */
+	  if(AFTER_GBSC == FALSE){
+	    /* We have to be at "after_gbsc" line to synchronize.
+	    *  Padding with enough zeroes should be enough  to force the
+	    *  decoder to that point.
+	    */
+	    if(r->h261.S){
+	      /* The next packet has Sbit == 1. So we have to save it.
+	      */
+	      RESYNCHRO = TRUE;
+#ifdef DEBUG
+	      printf("-- %d bytes saved since Sbit =1\n", lr);
+#endif
+	      packet_expected = sequence_number;
+	    }else
+	      packet_expected = nextp(sequence_number);
+	    pt_buf = buffer_resynchro;
+	    ii = 0;
+	    jj = 0;
+	    TRYING_RESYNC = TRUE;
+	    ll = 10;
+	    goto e_return;
+	  }else{
+	    /* We are at the "after_gbsc" line. So we only need to
+	     *  decode the next packet with Sbit == 1.
+	     */
+	    packet_expected = nextp(sequence_number);
+	    if(r->h261.S){
+	      break;
+	    }else{
+	      continue;
+	    }
+	  }
+	}else{
+	  /* Following code to decode must be a GBSC. So we only need to
+	   *  decode the next packet with Sbit == 1.
+	   */
+	  packet_expected = nextp(sequence_number);
+	  if(r->h261.S){
+	    break;
+	  }else{
+	    continue;
+	  }
+	}
+      }
+    }
+  }while(1);
+  
+  old_format = format;
+  r = (rtp_t *) &buf[B8];
+  format = r->h261.size;
+  if(SUPER_CIF)
+    cif_number = format & 0x03;
+  h = (rtp_hdr_t *) buf;
+  ts_usec = ntohs(h->ts_usec);
+  ts_sec = ntohs(h->ts_sec);
+  
+  if(FIRST){
+    last_ts_usec = old_ts_usec = ts_usec;
+    last_ts_sec = old_ts_sec = ts_sec;
+    old_format = format;
+    NG_MAX = (format == 0 ? 5 : 12);
+    MV_ENCODED = r->h261.V;
+    if(SUPER_CIF && MV_ENCODED){
+      fprintf(stderr, "Sorry, Super CIF is not full standard\n");
+      exit(1);
+    }
+    FIRST = FALSE;
+  }
+  
+#ifndef RECVD_ONLY
+  if(PACKET_LOST && (ts_usec != old_ts_usec)){
+    /*
+     *  We didn't display the previous image...
+     */
+#ifndef SAVE_FILE      
+    show(dec_dpy, dec_win, ximage);
+    nb_frame ++;
+    last_RT_displayed = RT;
+#else
+    if(CIF_MODE){
+      if(fwrite((char *) Y_pt, 1, dim_image, F_decoded_file) !=
+	 dim_image){
+	perror("fwrite decoded_file");
+      }
+    }else{
+      register int l;
+      int ltemp=0;
+      for(l=0; l<L_lig; l++){
+	if(fwrite((char *)(Y_pt+ltemp), 1, L_col, F_decoded_file) !=
+	   L_col)
+	  perror("fwrite decoded_file");
+	ltemp += 352;
+      }
+    }
+    fflush(F_decoded_file);
+    cpt_image ++;
+#endif /* SAVE_FILE */   
+  }
+#endif /* RECVD_ONLY */
+  
+  r = (rtp_t *) &buf[B8];
+  Ebit = r->h261.Ebit;
+  Sbit = r->h261.Sbit;
+  E = r->h261.E;
+  S = r->h261.S;
+#ifndef SAVE_FILE
+  NACK_FIR_ALLOWED = r->h261.F;
+#else
+  NACK_FIR_ALLOWED = TRUE;
+#endif
+  if(S){
+    /* It is a beginning of GOB, so a GBSC must be added */
+    ii = B8;
+    buf[B8] = 0;
+    if(Sbit == 0){
+      jj = 0;
+      buf[B8+1] = 0x01;
+    }else{
+      buf[B8+1] = 0x00;
+      buf[B8+2] |= SMASK[Sbit];
+      jj = Sbit;
+    }
+  }else{
+    /* It is not a beginning of GOB */
+    ii = B8+2;
+    jj = Sbit;
+  }
+#ifndef RECVD_ONLY
+  if((diff_sec=((ts_sec - last_ts_sec + 65536) % 65536)) > 5){
+    char data[5];
+    Arg args[1];
+    
+    diff_usec = 16 * (ts_usec - last_ts_usec);
+    delta_s = (double)diff_sec + (double)diff_usec/1000000.0;
+
+    sprintf(data, "%3.1f", (double)nb_frame/delta_s);
+    XtSetArg(args[0], XtNlabel, (String)data);
+    XtSetValues(value_fps, args, 1);
+    sprintf(data, "%3.1f", ((double)nb_bytes/125.0)/delta_s);
+    XtSetArg(args[0], XtNlabel, (String)data);
+    XtSetValues(value_kbps, args, 1);
+    sprintf(data, "%3.1f", 100.0*cpckt_lost/(double)cpckt_tot);
+    XtSetArg(args[0], XtNlabel, (String)data);
+    XtSetValues(value_loss, args, 1);
+    nb_bytes = 0;
+    nb_frame = 0;
+    last_ts_sec = ts_sec;
+    last_ts_usec = ts_usec;
+    cpckt_tot = 0;
+    cpckt_lost =0;
+  }
+#endif /* RECVD_ONLY */
+  pt_buf = buf;
+  ll = lr;
+  
+ e_return:
+  {
+    u_char * ptr_chaine_codee;
+    u_int byte4_codee;
+    int chaine_count;
+    int rj;
+    int len;
+    long last_adr;
+    long first_adr;
+    long tail;
+    long head;
+    
+    first_adr = (long)(pt_buf+ii);
+    last_adr = (long)(pt_buf+ll);
+    head = first_adr & 0x3;
+    tail = last_adr & 0x3;
+    first_adr &= ~0x3;
+    last_adr &= ~0x3;
+    len = ll - ii;
+    ptr_chaine_codee = (u_char *)first_adr;
+    
+    if(first_adr == last_adr){
+      chaine_count = 4;
+      LOAD_CODEn(ptr_chaine_codee, (head+len));
+      byte4_codee <<= (8*head+jj);
+      rj = len*8;
+    }else{
+      chaine_count = len + head - 2*tail;
+      LOAD_CODE(ptr_chaine_codee);
+      byte4_codee <<= (8*head + jj);
+      rj = 32 - (8*head + jj);
+    }
+    PUT_bit_state(bit_state, ptr_chaine_codee,
+		  byte4_codee, chaine_count, rj);
+    if(pbit_state != (TYPE_dec_bit_state *) 0){
+      look = 0;
+      *pbit_state = bit_state;
+    }else
+      look = 1;
+    return byte4_codee;
+  }
+}
+
+#endif /* NOT INPUT_FILE */
+
+
+
+

@@ -1,0 +1,619 @@
+#----------------- Common IVS Makefile ----------------------------------------
+
+SOURCES=../common/src/
+SOURCES_GSM=$(SOURCES)gsm/
+SOURCES_LPC=$(SOURCES)lpc/
+SOURCES_ADPCM=$(SOURCES)adpcm/
+
+#--------------- ENCRYPTION OPTIONS ---------------------
+#
+# Comment this section if you don't want any encryption
+#
+
+#CRYPTO_FLAGS = -DCRYPTO -DDES1
+#OBJ_CRYPTO=	setconfig.o md5.o getkey.o myrandom.o dullcrypt.o \
+#		lessdullcrypt.o des1crypt.o qfDES.o qfDES-memory.o qfDES-key.o
+#HEADERS_CRYPTO=	$(SOURCES)md5.h $(SOURCES)ivs_secu.h $(DES_SOURCES)qfDES.h
+#
+# If you can use DES, you can uncomment this section...
+#
+#DES_SOURCES=/u/elvis/6/rodeo/turletti/Des/
+#CRYPTO_FLAGS += -DDES1
+#CCINCL += -I$(HOME)/des
+#OBJ_CRYPTO += qfDES.o qfDES-memory.o qfDES-key.o
+#HEADERS_CRYPTO += $(DES_SOURCES)qfDES.h
+
+#---------------------- GENERAL --------------------------
+#
+
+HEADERS=$(SOURCES)ffct.h  $(SOURCES)huffman.h  \
+	$(SOURCES)quantizer.h \
+	$(SOURCES)ulaw2linear.h $(SOURCES)h261.h  \
+	$(SOURCES)huffman_coder.h $(SOURCES)protocol.h $(SOURCES)rtp.h
+
+OBJ_DISPLAY=    display_gentab.o display_imbld.o display_wmgt.o
+
+OBJ_NO_DISPLAY= display_gentab.o display_imbld.o no_display_wmgt.o
+
+OBJ_GSM=	gsm.o toast_ulaw.o gsm_encode.o gsm_decode.o code.o decode.o \
+		preprocess.o short_term.o long_term.o rpe.o gsmlpc.o add.o \
+		table.o
+OBJ_ADPCM=	adpcm_4.o adpcm_3.o adpcm_2.o adpcm_n.o vadpcm.o 
+
+OBJ_LPC=	lpc.o coderlpc.o decoderlpc.o 
+
+OBJ_AUDIO=	ulaw.o ulaw2.o $(OBJ_ADPCM) $(OBJ_LPC) $(OBJ_GSM)
+
+OBJ=    	protocol.o $(OBJ_CRYPTO) $(OBJ_DISPLAY) \
+		athena.o sound$(MACHINE).o $(OBJ_AUDIO) manage_socket.o
+
+OBJ_NO_DISP=	protocol.o $(OBJ_NO_DISPLAY) \
+		athena.o sound$(MACHINE).o $(OBJ_AUDIO) manage_socket.o
+
+OBJ_MC= 	mc_probetx.o mc_proberx.o mc_congmeters.o mc_misc.o
+
+OBJ_DCT=	ifct.o ffct.o ffct_intra.o \
+		ffct_chroma.o ffct_chroma_intra.o
+
+
+OBJ_CODER=      video_coder0.o video_coder1.o video_coder2.o video_coder3.o
+
+OBJ_IVS=	$(OBJ) data_module.o video_decoder0.o video_decoder1.o \
+		linked_list.o
+
+OBJ_IVS_REPLAY=	protocol.o $(OBJ_DISPLAY) athena_noaudio.o sound$(MACHINE).o \
+		$(OBJ_AUDIO) manage_socket.o data_module.o video_decoder0.o \
+		video_decoder1.o linked_list.o $(OBJ_CRYPTO)
+
+OBJ_IVS_FILE=	protocol.o $(OBJ_DISPLAY) athena_noaudio.o \
+		sound$(MACHINE).o $(OBJ_AUDIO) \
+		manage_socket.o data_module.o $(OBJ_CRYPTO) \
+		video_decoder0_file.o  video_decoder1_file.o linked_list.o
+
+OBJ_IVS_RECV=	$(OBJ) data_module.o video_decoder0_recv.o  \
+		video_decoder1_recv.o linked_list.o
+
+OBJ_IVS_SAVE_RECV= $(OBJ_NO_DISP) data_module.o \
+	video_decoder0_save_recv.o  video_decoder1_save_recv.o linked_list.o
+
+PRGS=		ivs ivsd ivs_record ivs_replay decode_h261 ivs_gw ivs_stat
+
+INSTALL_BIN=	$(INSTALL) -c -o bin -g bin -m 555
+BINDIR=		$(DESTDIR)/usr/local/bin
+INSTALL_MAN=	$(INSTALL) -c -o bin -g bin -m 444
+MANDIR=		$(DESTDIR)/usr/local/man/man1
+INSTALL_AD=	$(INSTALL_MAN)
+APPRESDIR=	/usr/X11R6/lib/X11/app-defaults
+
+#------------------------------------------------------------------------------
+
+all: $(PRGS)
+
+install:
+	$(INSTALL_BIN) ivs $(BINDIR)/ivs
+	for a in $(PRGS) ; do \
+	    $(INSTALL_BIN) $$a $(BINDIR); \
+	    done
+	for a in ../common/man/man1/*.1; do \
+	    $(INSTALL_MAN) $$a $(MANDIR); \
+	    done
+	$(INSTALL_AD) ../common//ivs.ad $(APPRESDIR)/Ivs
+
+
+ulaw.o: $(SOURCES)ulaw.c
+	$(CC) $(CFLAGS) \
+	-c $(SOURCES)ulaw.c
+
+ulaw2.o: $(SOURCES)ulaw.c
+	$(CC) $(CFLAGS) \
+	-c $(SOURCES)ulaw2.c
+
+sound$(MACHINE).o: $(SOURCES)sound$(MACHINE).c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(AUDIO_INCLUDE) \
+	-c $(SOURCES)sound$(MACHINE).c
+
+adpcm_4.o:$(SOURCES_ADPCM)adpcm_4.c $(SOURCES_ADPCM)adpcm_n.h \
+          $(SOURCES)ulaw2linear.h 
+	  $(CC) $(CFLAGS) -c $(SOURCES_ADPCM)adpcm_4.c
+ 
+adpcm_3.o:$(SOURCES_ADPCM)adpcm_3.c $(SOURCES_ADPCM)adpcm_n.h \
+          $(SOURCES)ulaw2linear.h
+	  $(CC) $(CFLAGS) -c $(SOURCES_ADPCM)adpcm_3.c
+ 
+adpcm_2.o:$(SOURCES_ADPCM)adpcm_2.c $(SOURCES_ADPCM)adpcm_n.h \
+          $(SOURCES)ulaw2linear.h
+	  $(CC) $(CFLAGS) -c $(SOURCES_ADPCM)adpcm_2.c
+ 
+adpcm_n.o:$(SOURCES_ADPCM)adpcm_n.c $(SOURCES_ADPCM)adpcm_n.h \
+          $(SOURCES)ulaw2linear.h
+	  $(CC) $(CFLAGS) -c $(SOURCES_ADPCM)adpcm_n.c
+
+vadpcm.o: $(SOURCES_ADPCM)adpcm_n.h $(SOURCES)ulaw2linear.h \
+	  $(SOURCES_ADPCM)vadpcm.c
+	  $(CC) $(CFLAGS) \
+	  -c $(SOURCES_ADPCM)vadpcm.c
+
+lpc.o:$(SOURCES_LPC)lpc.c $(SOURCES_LPC)lpc.h
+	$(CC) $(CFLAGS) \
+        -c $(SOURCES_LPC)lpc.c      
+
+coderlpc.o:$(SOURCES_LPC)coderlpc.c lpc.o
+	$(CC) $(CFLAGS) \
+        -c $(SOURCES_LPC)coderlpc.c 
+
+decoderlpc.o:$(SOURCES_LPC)decoderlpc.c lpc.o
+	$(CC) $(CFLAGS) \
+        -c $(SOURCES_LPC)decoderlpc.c       
+
+# ----- For the GSM 13 kb/s
+gsm.o: $(SOURCES_GSM)gsm.h  $(SOURCES_GSM)gsm.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)gsm.c
+
+toast_ulaw.o: $(SOURCES_GSM)gsm.h  $(SOURCES_GSM)toast_ulaw.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)toast_ulaw.c
+
+gsm_encode.o: $(SOURCES_GSM)gsm.h  $(SOURCES_GSM)gsm_encode.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)gsm_encode.c
+
+gsm_decode.o: $(SOURCES_GSM)gsm.h  $(SOURCES_GSM)gsm_decode.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)gsm_decode.c
+
+code.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)code.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)code.c
+
+decode.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)decode.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)decode.c
+
+preprocess.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)preprocess.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)preprocess.c
+
+short_term.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)short_term.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)short_term.c
+
+long_term.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)long_term.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)long_term.c
+
+rpe.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)rpe.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)rpe.c
+
+gsmlpc.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)gsmlpc.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)gsmlpc.c
+
+add.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)add.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)add.c
+
+table.o: $(SOURCES_GSM)private.h  $(SOURCES_GSM)table.c
+	$(CC) $(CFLAGS) $(CFLAGS2) \
+        $(CCINCL) \
+        $(CCDEFS) \
+        -c $(SOURCES_GSM)table.c
+
+#--------------------------------------
+
+audio.o: $(SOURCES)protocol.h $(SOURCES)audio.c $(SOURCES)audio.h 
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)audio.c
+
+
+ifct.o: $(SOURCES)h261.h $(SOURCES)ffct.h $(SOURCES)ifct.c 
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(SOURCES)ifct.c  
+
+
+ffct.o ffct_intra.o ffct_chroma.o ffct_chroma_intra.o : \
+        $(SOURCES)h261.h $(SOURCES)ffct.h $(SOURCES)ffct.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(SOURCES)ffct.c  -o ffct.o
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-DFFCT_INTRA -c $(SOURCES)ffct.c  -o ffct_intra.o
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-DFFCT_CHROMA -c $(SOURCES)ffct.c -o ffct_chroma.o
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-DFFCT_INTRA -DFFCT_CHROMA -c $(SOURCES)ffct.c  -o ffct_chroma_intra.o
+
+
+data_module.o: $(HEADERS)  $(SOURCES)data_module.c
+	$(CC) $(PFLAGS) \
+	$(CCDEFS) \
+	$(INCLUDE_MULTICAST) \
+	$(CCINCL) \
+	-c $(SOURCES)data_module.c -o data_module.o
+
+
+#-----------------------------------------------------------------------------
+
+md5.o:	$(HEADERS_CRYPTO) $(SOURCES)md5.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(SOURCES)md5.c
+		
+getkey.o: $(HEADERS_CRYPTO) $(SOURCES)getkey.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) $(CRYPTO_FLAGS) \
+	$(CCDEFS) \
+	-c $(SOURCES)getkey.c
+		
+myrandom.o: $(HEADERS_CRYPTO) $(SOURCES)myrandom.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)myrandom.c
+	
+test_random: myrandom.o md5.o
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	$(SOURCES)test_random.c md5.o myrandom.o $(LIB_EXTRA) -o $@
+	
+setconfig.o: $(HEADERS_CRYPTO) $(SOURCES)setconfig.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)setconfig.c
+		
+dullcrypt.o: $(HEADERS_CRYPTO) $(SOURCES)dullcrypt.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)dullcrypt.c
+		
+lessdullcrypt.o: $(HEADERS_CRYPTO) $(SOURCES)lessdullcrypt.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)lessdullcrypt.c
+		
+des1crypt.o: $(HEADERS_CRYPTO) $(SOURCES)des1crypt.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) -I$(HOME)/des \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)des1crypt.c
+		
+qfDES.o: $(HEADERS_CRYPTO) $(DES_SOURCES)qfDES.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(DES_SOURCES)qfDES.c
+		
+qfDES-memory.o: $(HEADERS_CRYPTO) $(DES_SOURCES)qfDES-memory.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(DES_SOURCES)qfDES-memory.c
+		
+qfDES-key.o: $(HEADERS_CRYPTO) $(DES_SOURCES)qfDES-key.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(DES_SOURCES)qfDES-key.c
+		
+#-----------------------------------------------------------------------------
+
+video_decoder0.o: $(HEADERS) $(SOURCES)video_decoder0.c \
+	$(SOURCES)video_decoder.h
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)video_decoder0.c 
+
+
+video_decoder1.o: $(HEADERS)  $(SOURCES)video_decoder1.c \
+	$(SOURCES)video_decoder.h
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	$(CCDEFS) \
+	-c $(SOURCES)video_decoder1.c 
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+video_decoder0_file.o: $(HEADERS) $(SOURCES)video_decoder0.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) -DINPUT_FILE \
+	-c $(SOURCES)video_decoder0.c -o video_decoder0_file.o
+
+
+video_decoder1_file.o: $(HEADERS)  $(SOURCES)video_decoder1.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) -DINPUT_FILE \
+	-c $(SOURCES)video_decoder1.c -o video_decoder1_file.o
+
+video_decoder0_recv.o: $(HEADERS) $(SOURCES)video_decoder0.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) -DRECVD_ONLY -DLOG_STAT \
+	-c $(SOURCES)video_decoder0.c -o video_decoder0_recv.o
+
+
+video_decoder1_recv.o: $(HEADERS)  $(SOURCES)video_decoder1.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) -DRECVD_ONLY \
+	-c $(SOURCES)video_decoder1.c -o video_decoder1_recv.o
+
+video_decoder0_save_recv.o: $(HEADERS) $(SOURCES)video_decoder0.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) -DSAVE_FILE \
+	-c $(SOURCES)video_decoder0.c -o video_decoder0_save_recv.o
+
+
+video_decoder1_save_recv.o: $(HEADERS)  $(SOURCES)video_decoder1.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) -DSAVE_FILE \
+	-c $(SOURCES)video_decoder1.c -o video_decoder1_save_recv.o
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+video_coder0.o: $(HEADERS)  $(SOURCES)video_coder0.c \
+	$(SOURCES)video_coder.h 
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)video_coder0.c -o $(ENCODE)video_coder0.o
+
+video_coder1.o: $(HEADERS)  $(SOURCES)video_coder_gen.c \
+	$(SOURCES)video_coder.h 
+	$(CC) $(CFLAGS) -DGETSTAT_MODE -DRATE_MAX_DUMP \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) \
+	-c $(SOURCES)video_coder_gen.c -o video_coder1.o
+
+video_coder2.o: $(HEADERS)  $(SOURCES)video_coder_gen.c \
+	$(SOURCES)video_coder.h 
+	$(CC) $(CFLAGS) -DENCODE_CIF4 \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) \
+	-c $(SOURCES)video_coder_gen.c -o video_coder2.o
+
+video_coder3.o: $(HEADERS)  $(SOURCES)video_coder3.c \
+	$(SOURCES)video_coder.h 
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)video_coder3.c -o video_coder3.o
+
+
+athena.o: $(SOURCES)athena.c $(SOURCES)athena.h Makefile
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)athena.c
+
+athena_noaudio.o: $(SOURCES)athena.c Makefile
+	$(CC) $(CFLAGS) -DNO_AUDIO \
+	$(CCDEFS) \
+	$(CCINCL) $(CRYPTO_FLAGS) \
+	-c $(SOURCES)athena.c -o $@
+
+display_gentab.o: $(SOURCES)h261.h $(SOURCES)protocol.h $(SOURCES)display.h \
+	$(SOURCES)general_types.h $(SOURCES)display_gentab.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)display_gentab.c 
+
+display_imbld.o: $(SOURCES)h261.h $(SOURCES)protocol.h $(SOURCES)display.h \
+	$(SOURCES)general_types.h $(SOURCES)display_imbld.c
+	$(CC) -O \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)display_imbld.c 
+
+display_wmgt.o: $(SOURCES)h261.h $(SOURCES)protocol.h $(SOURCES)display.h \
+	$(SOURCES)general_types.h $(SOURCES)display_wmgt.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)display_wmgt.c 
+
+protocol.o: $(SOURCES)protocol.h $(SOURCES)rtp.h $(SOURCES)protocol.c
+	$(CC) $(CFLAGS) $(PFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) $(CRYPTO_FLAGS) \
+	$(CCMULTICASTINCL) \
+	-c $(SOURCES)protocol.c
+
+manage_socket.o: $(SOURCES)manage_socket.c
+	$(CC) $(CFLAGS) $(PFLAGS) \
+	$(CCDEFS) \
+	$(CCMULTICASTINCL) \
+	-c $(SOURCES)manage_socket.c
+
+
+linked_list.o: $(SOURCES)linked_list.c
+	$(CC) $(CFLAGS) \
+	$(CCINCL) \
+	-c $(SOURCES)linked_list.c
+
+mc_probetx.o: $(SOURCES)rtp.h $(SOURCES)mc_header.h \
+	$(SOURCES)mc_probetx.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)mc_probetx.c -o mc_probetx.o
+
+mc_proberx.o: $(SOURCES)rtp.h $(SOURCES)mc_header.h $(SOURCES)mc_proberx.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)mc_proberx.c -o mc_proberx.o
+
+mc_congmeters.o: $(SOURCES)rtp.h $(SOURCES)mc_header.h \
+	$(SOURCES)mc_congmeters.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)mc_congmeters.c -o mc_congmeters.o
+
+mc_misc.o: $(SOURCES)rtp.h $(SOURCES)mc_header.h \
+	$(SOURCES)mc_misc.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)mc_misc.c -o mc_misc.o
+
+ivs.o: $(SOURCES)h261.h $(SOURCES)protocol.h \
+	$(SOURCES)quantizer.h $(SOURCES)ivs.c Makefile
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) $(CRYPTO_FLAGS) \
+	$(CCINCL) \
+	-c $(SOURCES)ivs.c -o $@
+
+ivs: $(HEADERS) $(OBJ_IVS) $(OBJ_DCT) $(OBJ_VIDEO) $(OBJ_CODER) \
+	$(OBJ_MC) audio.o ivs.o Makefile
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(OBJ_IVS) \
+	$(OBJ_DCT) \
+	$(OBJ_VIDEO) \
+	$(OBJ_CODER) \
+	$(OBJ_MC) \
+	audio.o \
+	ivs.o \
+	-L$(X11_LIBDIR) $(XLIBRARY) $(LIB_VIDEO) $(LIB_AUDIO) \
+	$(LIB_EXTRA) -lm -o $@ 
+
+
+decode_h261: $(HEADERS) $(OBJ_IVS_FILE) $(OBJ_DCT) $(SOURCES)decode_h261.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+        $(OBJ_IVS_FILE) \
+        $(OBJ_DCT) \
+	$(SOURCES)decode_h261.c \
+	-L$(X11_LIBDIR) $(XLIBRARY) $(LIB_AUDIO) $(LIB_EXTRA) -lm -o $@
+
+
+ivs_record: $(HEADERS) protocol.o manage_socket.o identifier.o \
+	$(OBJ_DISPLAY) athena_noaudio.o $(OBJ_CRYPTO) \
+	$(SOURCES)ivs_record.c 
+	$(CC) $(CFLAGS) -DNO_AUDIO \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(PFLAGS) \
+	protocol.o manage_socket.o identifier.o $(OBJ_DISPLAY) \
+	athena_noaudio.o $(OBJ_CRYPTO) $(SOURCES)ivs_record.c \
+	-L$(X11_LIBDIR) $(XLIBRARY) $(LIB_EXTRA) -lm -o $@
+
+h261_record: $(SOURCES)h261.h $(SOURCES)protocol.h $(SOURCES)quantizer.h \
+	protocol.o $(OBJ_DISPLAY) athena.o $(OBJ_CRYPTO) \
+	$(SOURCES)h261_record.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(PFLAGS) \
+	protocol.o $(OBJ_DISPLAY) athena.o $(OBJ_CRYPTO) \
+	$(SOURCES)h261_record.c \
+	-L$(X11_LIBDIR) $(XLIBRARY) $(LIB_EXTRA) -lm -o $@
+
+ivs_replay: $(HEADERS) $(OBJ_DCT) $(OBJ_IVS_REPLAY) $(OBJ_MC) \
+	$(SOURCES)ivs_replay.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(PFLAGS) \
+	$(OBJ_DCT) $(OBJ_IVS_REPLAY) $(OBJ_MC) $(SOURCES)ivs_replay.c \
+        -L$(X11_LIBDIR) $(XLIBRARY) $(LIB_AUDIO) $(LIB_EXTRA) -lm -o $@
+
+ivsd: $(SOURCES)ivsd.c protocol.o $(OBJ_CRYPTO) 
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(PFLAGS) -L$(X11_LIBDIR) protocol.o $(OBJ_CRYPTO) \
+	$(SOURCES)ivsd.c -L$(X11_LIBDIR) $(XLIBRARY) $(LIB_EXTRA) -lm -o $@
+
+ivs_stat: $(SOURCES)rtp.h $(SOURCES)protocol.h $(SOURCES)ivs_stat.c \
+	protocol.o manage_socket.o $(OBJ_CRYPTO)
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	$(PFLAGS) \
+	protocol.o manage_socket.o $(OBJ_CRYPTO) \
+	$(SOURCES)ivs_stat.c $(LIB_SOLARIS) $(LIB_EXTRA) -lm -o $@
+
+identifier.o: $(HEADERS) $(SOURCES)identifier.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	-c $(SOURCES)identifier.c
+
+ivs_gw: $(SOURCES)ivs_gw.c identifier.o protocol.o manage_socket.o \
+	$(OBJ_CRYPTO)
+	$(CC) $(CFLAGS) \
+	$(PFLAGS) \
+	$(CCMULTICASTINCL) \
+	$(CCDEFS) \
+	$(CCINCL) \
+	protocol.o identifier.o manage_socket.o $(OBJ_CRYPTO) \
+	$(SOURCES)ivs_gw.c $(LIB_SOLARIS) $(LIB_EXTRA) -lm -o $@
+
+no_display_wmgt.o: $(SOURCES)h261.h $(SOURCES)protocol.h $(SOURCES)display.h \
+	$(SOURCES)general_types.h $(SOURCES)display_wmgt.c
+	$(CC) $(CFLAGS) \
+	$(CCDEFS) -DHIDE_WINDOW \
+	$(CCINCL) \
+	-c $(SOURCES)display_wmgt.c -o no_display_wmgt.o
+
+clean:	
+	rm -f *.o core *~
+
+realclean: clean
+	   rm -f $(PRGS)
+

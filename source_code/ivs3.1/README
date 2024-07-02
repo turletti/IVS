@@ -1,0 +1,358 @@
+/**************************************************************************\
+*          Copyright (c) 1992 INRIA Sophia Antipolis, FRANCE.              *
+*                                                                          *
+* Permission to use, copy, modify, and distribute this material for any    *
+* purpose and without fee is hereby granted, provided that the above       *
+* copyright notice and this permission notice appear in all copies.        *
+* WE MAKE NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY OF THIS     *
+* MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", WITHOUT ANY EXPRESS   *
+* OR IMPLIED WARRANTIES.                                                   *
+\**************************************************************************/
+
+I. INTRODUCTION
+
+This is a software implementation of the INRIA VIDEOCONFERENCE SYSTEM, in a
+"standard" environment, under UNIX, X-WINDOWS and the Athena toolkit.
+
+Pease, see manual page...
+
+II. TESTING IVS
+
+First set XENVIRONMENT variable to the file ivs.ad or add these
+variables to your .Xdefaults file.
+Check that DISPLAY variable is set (jerry:0 for example).
+
+Then, run ivs
+
+ivs -T 64, for example (multicast option, and ttl=64)
+
+ivs jerry.inria.fr ; (another example with unicast option.)
+
+IP address multicast is set by default to 224.8.8.8
+The stations on the same IP address will be automatically seen. Several control
+packets are sent (Declaration, Information required, End ), you only need
+to select your audio(s) decoding and video(s) decoding station(s).
+
+If you ftp & use this codec, you can send all remarks or modifications made to
+turletti@sophia.inria.fr .
+
+Thanks in advance.
+
+----------------------
+Thierry TURLETTI                              e-mail : turletti@sophia.inria.fr
+Project RODEO
+INRIA Sophia Antipolis
+2004 route des Lucioles, BP 93, 06902 Sophia Antipolis -- FRANCE
+
+
+*********************************************************************************
+                                LIST  OF  CHANGES
+*********************************************************************************
+
+WARNING : Version 1.8 is not compatible with previous versions.
+
+In 1.0 to 1.7 versions, all the blocks were encoded in INTRA mode thereby
+limiting the effect of packet loss. A coded block pattern (CBN) was added in 
+each macroblock (MB) so as not to necessarily encode all the blocks in a MB. 
+This was not foreseen in the H.261 recommendation.
+
+
+-------------------------------------------------------------------------------
+
+With 1.8 version, Only the first image, images whith a lot of movement (change
+of scene) and refreshment images are encoded in INTRA mode. Hence, I removed 
+the "illegal" CBN.
+
+Otherwise, INTER mode is used. Results are rather good, encoding/decoding is
+faster and compression is #3-4 times important. Anyway, if packets are lost,
+decoding processes inform the encoder, and only the GOB lost are forced in
+INTRA mode.
+
+I added a little program "rate" to appreciate the output rate. Runs it on
+another machine supporting IP multicast. Type "rate" and instantaneous rate is
+displayed. Type ^C to know the mean rate.
+
+
+
+-------------------------------------------------------------------------------
+
+In 1.9 version, a Headphone/Speaker button has been added to the panel, 
+modification made by Ian Daniel <Daniel@europarc.xerox.com>.
+
+On the other hand, when gethostbyaddr() failed, now the Internet address style
+138.23.45.56 takes the place of the hostname.
+
+
+-------------------------------------------------------------------------------
+
+Main changes of 1.10 version are :
+
+ - support for SGI Indigo stations (added by <Guido.van.Rossum@cwi.nl>)
+
+ - improvements mainly in VideoPix grabbing procedures and video_coder.c
+   (made by <wkd@uhunix.uhcc.Hawaii.Edu>)
+
+ - ability to display video on 4-bit depth screen.
+
+ - ability to record and replay video and audio clips. This is done with
+the programs *ivs_record* and *ivs_replay*. ivs_record records audio/video
+clips in a file (the same file is used for both audio and video). These clips 
+can be sent via e-mail using MIME extensions. To do this, append the following
+in your mailcap file :  "application/x-ivs; ivs_replay -o %s"
+
+
+
+-------------------------------------------------------------------------------
+
+In 1.12 version, the ivs_record tool supports unicast station
+recording. Others improvements have been made by Guido.van.Rossum@cwi.nl.
+
+videosgi.c:
+    - change code to use released libsvideo API:
+       -- svGetCaptureData always sets the ptr argument.
+       -- odd field comes first so swap buf_even/odd.
+    - get 8-bit B&W data directly by disabling color and dither modes.
+    - normalize video data to range expected by H.261 spec.
+
+
+-------------------------------------------------------------------------------
+
+version 1.13:
+Sometimes, in previous versions, the video decoder exited for no
+apparent reason. This bug is fixed in the 1.13 version. (The
+chosen quantizer wasn't large enough to encode DCT
+coefficient...). In this version the "One GOB <-> One packet"
+option is selected by default.
+
+-------------------------------------------------------------------------------
+
+version 2.0:
+**************************************************************************
+                                 WARNING 
+
+        THIS VERSION IS NOT COMPATIBLE WITH PREVIOUS IVS VERSIONS
+**************************************************************************
+
+
+Main changes are :
+
+* A larger format Super CIF (704*576pels) is added. A Super CIF image is 
+transmitted using 4 standards CIF images. It is very convenient to display
+images such as slides.
+
+* More information is now included in a MB. When a packet is lost, all those
+MBs which were lost are now encoded in INTRA mode in the next image.
+In previous version, the entire packet (and hence possibly many GOBs) would
+have been encoded.
+
+* The 1GOB<->1packet , 1image<->1packet option have been removed. Now GOBs are
+encoded in different packets except if their size is lower than 500 bytes.
+
+* A "Local display" option has been added. It allows to display locally
+the image grabbed at the output of VideoPix. It is useful either to tune the 
+camera or in unicast mode to see what is sent to your correspondent.
+
+* In NTSC format, the image is now automatically reduced to the correct size. 
+I have to thank Tom Sandoski who helped me debug the NTSC grabbing code.
+
+* Speed improvements: for example, the QCIF display can now go up to 6 images/s
+when movement is minimal.
+
+* The -o option has disappeared. To double the size of a QCIF, you have now
+to use the -double option.
+
+* Two new options
+
+  -r: In this mode, only the active stations are saved in the local table.
+      Then the full list error is unlikely to show up anymore.
+  -a: Avoid the automatic audio decoding. So, the audio device is open only 
+      when you explicitly select an audio decoding.
+
+
+
+-------------------------------------------------------------------------------
+
+version 2.1:        A lot of changes & improvements ...
+
+
+* Rate control menu added: Three choices are available, first one
+ is selected by default.
+
+ 1/ Without rate control: This is the default mode, without any
+                          rate control.
+ 
+ 2/ Privilege quality: In this mode, you can select a maximum rate.
+                     The frame rate is reduced in order not to
+		     overrun the maximum rate but quality of each
+		     image is the same.
+ 
+ 3/ Privilege frame rate: In this mode, you can choose an output
+                     rate. No delay is introduced. The control
+		     rate is done using the quantizer and the
+		     movement detection's threshold. These
+		     parameters are dynamically chosen to fit in
+		     the bandwidth selected.
+
+
+* NEW LOOK, removing all Motif calls and using the Athena toolkit. A
+ scrollbar is now used to display the list of participants. (The
+ previous display was not very fast...) This list of participants
+ begins first with your local station, the active stations and then,
+ the passive stations.
+
+* A new button allows to freeze the image.
+
+* Now, local display selection, audio encoding mode and VideoPix port input may
+ be changed during encoding.
+
+* The audio driver is automatically closed when there is no audio
+data encoding/decoding.
+
+* The video bandwidth and the frame rate are now displayed at the
+encoder side.
+
+* Speed improvements
+
+* ivsd added. It is an ivs daemon. Running it in background allows
+ you to be called by anyone on the Internet. A small icon will
+ appear and a message will pop up when an ivs talk is requested. If
+ you click on the "Accept" option, an ivs command will be run
+ automatically towards your party. For example, if you want to call
+ asterix@obelix.fr, just run ivs obelix.fr
+ Then, if you click on the "Call up" button, the ivs request is
+ sent to the obelix.fr host.
+
+* Port numbers are now differents in unicast mode. In this way an
+ unicast call may be done during a multicast conference.
+
+* Video and audio decoding options are now implicit except for
+ your local station. To disable this mode, use the -a|-v options
+ (see manual).
+
+* IVS is now supporting :
+
+ # SPARCSTATIONS (audio + video)
+   --> VideoPix framegrabber
+   --> Parallax framegrabber [Thanks to Edgar Ostrowski and Frank Ruge]
+
+ # SGI (audio + video) [Thanks to Guido van Rossum]
+    
+ # HP (audio + video)
+   --> Raster Rops framegrabber [Thanks to Edgar Ostrowski, Frank
+                                 Ruge and Markus Rebensburg]
+
+ # DECSTATIONS (only video decoding ...) 
+
+-------------------------------------------------------------------------------
+
+version 3.0:
+
+**************************************************************************
+                                 WARNING 
+
+        THIS VERSION IS NOT COMPATIBLE WITH PREVIOUS IVS VERSIONS
+**************************************************************************
+
+* The packets formats have been changed according to the two
+  following Internet Drafts:
+
+    - "A Transport Protocol for Real-Time Applications", H. Schulzrinne,
+    AVT working group, 12/15/92.
+
+  and
+
+    - "Packetization of H.261 video streams", C. Huitema & T. Turletti,
+    AVT working group, 3/8/93.
+
+
+* For VideoPix only, Square pixels are now correctly processed in
+  B&W mode and real CIF (352x288pels) is obtained for both PAL and
+  NTSC video streams.
+
+* For VideoPix only, brightness and contrast tuning is added
+  at the coder side. The last IETF retransmission showed that such
+  a tuning is useful when the scene to display is dark.
+
+
+* A new optional mode, "Avoid Feedback" is added. This mode must
+  be chosen when there are a lot of decoding stations (more than
+  10). Video decoders won't send to the video coder Negative
+  Acknowledges neither Full Intra Requests. This option limits the
+  number of successives INTER encodings blocks and forces the INTRA
+  encoding mode more frequently. Selection is done in the "Rate
+  Control" menu, video coder side.
+
+
+* Brightness and Contrast tuning are now managed by the video
+  decoders processes. A tuning popup appears when you click on a
+  decoding window.
+
+
+* Packets length is now limited to 1000 bytes. If a GOB is larger
+  than this limit, it will be sent in several packets. If a part
+  of the GOB is lost, the video decoder process can resynchronize
+  itself with the next GOB received. Resynchronization facility
+  has been added to the video decoder.
+
+* A decode_h261 program is added to decode an H.261 encoded file. It allows
+  to run the h261_decode routine without the session manager. It should be
+  useful while testing the interoperability between ivs and Hardware H.261 
+  codecs. The H.261 encoded sequence "Miss America" is included in the 
+  examples directory.
+
+* For VideoPix, with cameras only, a color encoding/decoding mode is now
+  available thanks to a collaboration with Pierre Delamotte from
+  INRIA Rocquencourt, (delamot@wagner.inria.fr). The grabbing
+  procedures for others plateforms are not available yet.
+
+
+* IVS is now supporting the VIDEOTX framegrabber for DecStations,
+  thanks to Jian Zhang from CSIRO/Joint Research Centre in
+  Information Technology Flinders University of South Australia,
+  (jian@jrc.flinders.edu.au).
+
+
+-------------------------------------------------------------------------------
+
+version 3.1:
+
+This new version should be used at the JENC demo, 10-13 May. 
+Decoding hardware H.261 codecs such as Bitfield and GPT codecs is
+now possible with ivs. Also, ivs video encoding has been successfully
+received on a Bitfield codec.
+
+Main changes are:
+
+* Several bugs in the colormap have been removed. Now ivs is able to
+  run on 1, 4, 8 and 16-bits display.
+
+* A Push To Talk button is added to avoid local echo while using
+  a speaker (Sparc only).
+
+* When several stations are talking in the same time, now only one
+  station is decoded to avoid the previous ugly mixing...
+
+
+* Several options are added:
+
+     -dp       Disable the Push to talk button.
+
+     -grey     Force grey decoding display.
+
+     -q quantizer
+               Force the default quantizer value; useful  when
+               sending to Bitfield codec.
+
+     -S Squelch level
+               Force the default squelch level (silence detection
+               threshold between 0 and 255).
+
+
+
+
+If you have any problems with this new version, please let me know.
+
+Thanks,
+
+Thierry Turletti
+turletti@sophia.inria.fr

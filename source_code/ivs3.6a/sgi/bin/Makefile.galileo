@@ -1,0 +1,9 @@
+#----------------------------------------------------------------------
+# 2- GALILEO BOARD includes and libraries
+#
+#------------------- GALILEO CARD DEFINITIONS -----------------------
+#
+LIB_VIDEO_GALILEO=/usr/lib/libvl.so
+CARD_INCLUDE_GALILEO=
+CARD_DEF_GALILEO= -DGALILEOVIDEO -DINDYVIDEO
+OBJ_VIDEO_GALILEO=grab_galileovideo.o videosgi_galileo.o

@@ -1,0 +1,61 @@
+.\"  @(#)ivs_gw.1 3.3 94/1/5 SMI
+.\"
+.\"  Copyright (c) 1994 by INRIA Sophia-Antipolis
+.\"
+.TH IVS_GW 1 "5 January 1994
+.SH NAME
+.B ivs_gw
+ RTP\-level gateway for \fIIVS\fR.
+.SH SYNOPSIS
+.B ivs_gw
+\fIsourceA\fR[/\fIvideo_portA\fR]
+\fIsourceB\fR[/\fIvideo_portB\fR]
+[
+.B \-t
+.I ttl
+] 
+.SH DESCRIPTION
+.LP
+.B ivs_gw
+is a RTP translator for the IVS application. It can be used for
+example to merge two different conferences or in conjunction with
+firewalls.  Firewalls will not let any IP packet pass.
+Two \fIivs_gw\fR are installed, one on either side of the
+firewall, the outside one funneling all multicast packets received
+through the secure connection to the translator inside the firewall.
+.SH OPTIONS
+.LP
+.TP 10
+\fIsourceA\fR[/\fIvideo_portA\fR]
+Set the first source address and port number. You can specify a
+multicast address, an unicast address or a hostname. IP multicast
+address are in the range 224.0.0.0 to 239.255.255.255, but IANA has 
+designated 64K block of addresses for multimedia conferencing: 
+224.2.0.0 - 224.2.255.255. 
+Three UDP port numbers are used, one for each data flow (video, audio,
+control). The \fIaudio port\fR is \fIvideo_port + 1\fR and the control port is 
+\fIvideo_port + 2\fR. Default \fIvideo port\fR is \fI2232\fR in
+multicast mode and \fI2235\fR in unicast mode.
+.LP
+.TP 10
+\fIsourceB\fR[/\fIvideo_portB\fR]
+Set the second source address and port number.
+.LP
+.TP 10
+.B \-t \fIttl\fR
+Set the multicast time-to-live to \fIttl\fR.
+.SH NOTES
+.LP
+Translators such as \fIivs_gw\fR do not restore timing and do not mix
+packets from different sources.
+.SH BUGS
+.LP
+The NACK, FIR and QoS reports are directly sent from ivs decoders to
+ivs coders and not through the ivs_gw.
+.SH "SEE ALSO"
+.I ``RTP: A Transport Protocol for Real-Time Application''
+(H. Schulzrinne\/S.Casner), October 20th 1993, Audio-Video
+Transport WG, Internet-Draft,
+.BR ivs (1).
+.SH "AUTHOR"
+Thierry Turletti <turletti@sophia.inria.fr>.

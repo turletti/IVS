@@ -1,0 +1,13 @@
+IVS version 3.6a (95/7/13)
+
+* Included the changes concerning security functions from Ian Wakeman (UCL).
+  IVS and VIC should now cooperate...
+
+* Fixed a bug in the audio selection menu which mixed up the audio coding 
+  format.
+
+* Recompile the solaris binary on a Solaris 2.3 to build a version with 
+  the static xil library. It seems static xil libraries are not avalaible
+  on Solaris 2.4 (at least on my platform). Does any SUN guru know anything
+  about this ?
+  

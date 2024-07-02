@@ -1,3 +1,5 @@
 directory name,author name,author email,date,curator name,curator email,release tag,commit message
-v1.0,Me,me@example.com,09/16/1972 09:54:00,The Curation Team,l.bussi1@studenti.unipi.it,1.0,"First release|First commit description|and so on"
-v1.1,Me,me@example.com,10/16/1972 09:14:00,The Curation Team,l.bussi1@studenti.unipi.it,1.1,"Second release|Second commit description|and so on"
+ivs1.5,Thierry Turletti,thierry.turletti@inria.fr,1992/07/08,Thierry Turletti,thierry.turletti@inria.fr,1.5,"version 1.5 of IVS called videoconf"
+ivs1.8,Thierry Turletti,thierry.turletti@inria.fr,1992/09/25,Thierry Turletti,thierry.turletti@inria.fr,1.8,"version 1.8 of IVS"
+ivs3.1,Thierry Turletti,thierry.turletti@inria.fr,1993/06/10,Thierry Turletti,thierry.turletti@inria.fr,3.1,"version 3.1 of IVS"
+ivs3.6a,Thierry Turletti,thierry.turletti@inria.fr,1995/07/01,Thierry Turletti,thierry.turletti@inria.fr,3.6a,"version 3.6a of IVS"

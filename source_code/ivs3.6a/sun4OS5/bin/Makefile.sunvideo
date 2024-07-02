@@ -1,0 +1,13 @@
+#
+#---------------------------------------------------------------------------
+# SunVideo BOARD includes and libraries
+#
+SUNVIDEO_HOME=/opt/SUNWits/Graphics-sw/xil
+#SUNVIDEO_HOME=/u/nuage5/net2/opt.solaris.2.3/SUNWits/Graphics-sw/xil
+
+LIB_VIDEO += -L$(SUNVIDEO_HOME)/lib -lxil \
+                    -R$(SUNVIDEO_HOME)/lib:$(X11_LIBDIR)
+CARD_INCLUDE += -I$(SUNVIDEO_HOME)/include
+CARD_DEF += -DSUNVIDEO -DXIL
+OBJ_VIDEO += videosparc_sunvideo.o grab_sunvideo.o dither_sunvideo.o
+

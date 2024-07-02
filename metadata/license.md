@@ -1,17 +1,12 @@
 # licence.md Template 
-
-Here we propose a template for licence.md for SHWAP.
-
-If the software uses a standard licence please link [SPDX](https://spdx.org/licenses/) 
-and set the repository file LICENCE.md 
-according to the [GitHub licencing guidelines](https://help.github.com/en/articles/licensing-a-repository) and compliant with [common practice](see https://reuse.software/tutorial/).
-
-In case of custom licence put the link to the actual licence specification file 
-and copy its content into LICENCE.md 
-according to the [GitHub licencing guidelines](https://help.github.com/en/articles/licensing-a-repository) and compliant with [common practice](see https://reuse.software/tutorial/).
-
-## Example with standard licence
-[MIT Licence](https://spdx.org/licenses/MIT.html) : https://spdx.org/licenses/MIT.html
-
-## Example with custom licence
-[Custom Licence](./materials/Copyright) : ./materials/Copyright
+## Custom licence
+/**************************************************************************\
+*          Copyright (c) 1992-1995 INRIA Sophia Antipolis, FRANCE.              *
+*                                                                          *
+* Permission to use, copy, modify, and distribute this material for any    *
+* purpose and without fee is hereby granted, provided that the above       *
+* copyright notice and this permission notice appear in all copies.        *
+* WE MAKE NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY OF THIS     *
+* MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", WITHOUT ANY EXPRESS   *
+* OR IMPLIED WARRANTIES.                                                   *
+\**************************************************************************/

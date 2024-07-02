@@ -1,0 +1,41 @@
+This is a straight port to the AF facility. No bells whistles for the moment.
+To be able to ivs use with AF you need to have AF on your workstation. 
+You can get it from crl.dec.com:/pub/DEC/AF. Ivs with AF requires the only the
+audio-server from AF to be running. See AF doc for further information.
+
+The port to ivs has been done on Personal Decstation 20. AF was patched to 
+level 22.
+	
+
+Tested with:
+
+	MIPS PDS 20 baseboard audio. ( Amaxine )
+	MIPS PDS 20 DecAudio. ( Alofi ).
+
+Bugs:
+
+	Sure this the first version with AF. And AF is rather new too...
+
+	Performance bug in Amaxine. The Amaxine is the audioserver on
+	Personal Decstation which uses baseboard audio. The AF-server
+	Amaxine takes about 10% of the CPU. Alofi is better.
+
+TODO:
+
+	A better model for playing sound is needed. Playback delays
+	should be alterable via user options and of course sensitive 
+	to changes in the transmission.
+
+
+Comments to:
+		Thierry Turletti <Thierry.Turletti@sophia.inria.fr>
+		Robert Olsson <Robert.Olsson@data.slu.se>
+
+References:
+
+	AudioFile: A Network-Transparent System for Distributed Audio 
+	Applications.  Levergood, Payne, Gettys, Treese. DEC CRL.
+
+	 
+
+Robert Olsson

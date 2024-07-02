@@ -1,0 +1,182 @@
+#                             IVS ENVIRONMENT FILE
+#
+# set the XENVIRONMENT variable to this file
+
+# IVS PARAMETERS
+
+IVS*Label.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*Label.borderWidth:             0
+IVS*Label.background:              LightSteelBlue
+IVS*Form.borderWidth:              0
+IVS*Form.background:               LightSteelBlue
+IVS*Form1.borderWidth:             1
+IVS*Form2.borderWidth:             1
+IVS*Form3.borderWidth:             1
+IVS*Form4.borderWidth:             1
+IVS*Form4.background:              Black
+IVS*MainForm.borderWidth:          0
+IVS*menu.background:               MistyRose1
+IVS*Command.background:            DarkSlateGrey
+IVS*Command.foreground:            MistyRose1
+IVS*MenuButton.background:         MistyRose1
+IVS*MenuButton.foreground:         DarkSlateGrey
+IVS*LabelTitle.background:         Black
+IVS*LabelTitle.foreground:         MistyRose1
+IVS*LabelTitle.font: -adobe-courier-bold-r-normal--17-120-100-100-m-100-iso8859-1
+IVS*NameBrightness.label:          Brightness:
+IVS*NameBrightness.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*NameContrast.label:            Contrast:
+IVS*NameContrast.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*ButtonDefault.label:           Default
+IVS*ButtonLocal.label:             No Local display
+IVS*ButtonFreeze.label:            Push to freeze
+IVS*ButtonFreeze.width:            120
+IVS*ButtonControl.label:           Rate control
+IVS*ButtonEVideo.label:            Encode video
+IVS*ButtonEAudio.label:            Encode audio
+IVS*ButtonQuit.label:              Quit
+IVS*ButtonQuit.background:         Red
+IVS*ButtonQuit.foreground:         White
+IVS*NameControl.label:             Max bandwidth:
+IVS*NameControl.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*FormBandwidth.background:      White
+IVS*FormBandwidth.resizable:       True
+IVS*LabelB1.label:                 Bandwidth :
+IVS*LabelB2.label:                 ____
+IVS*LabelB3.label:                 Kbit/s
+IVS*LabelR1.label:                 Frame rate:
+IVS*LabelR2.label:                 ____
+IVS*LabelR3.label:                 image/s
+IVS*LabelB*font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*NameVolAudio.label:            Volume Gain:
+IVS*NameRecAudio.label:            Record Gain:
+IVS*ButtonOptAudio.label:          Audio encoding
+IVS*ButtonPortVideo.label:         Video input port
+IVS*ButtonFormatVideo.label:       Video format
+IVS*FormScale.borderWidth:         0
+IVS*ScrollScale.orientation:       horizontal
+IVS*ScrollScale.width:             100
+IVS*ScrollScale.height:            10
+IVS*ScrollScale.borderWidth:       4
+IVS*ScrollScale.minimumThumb:      4
+IVS*ScrollScale.thickness:         4
+IVS*ScrollScale.background:        LightSteelBlue4
+IVS*ScrollScale.foreground:        White
+IVS*NameScale.borderWidth:         0
+IVS*NameScale.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*ValueScale.borderWidth:        0
+IVS*ValueScale.font: -adobe-courier-bold-r-normal--11-80-100-100-m-60-iso8859-1
+IVS*LabelHosts.background:         Black
+IVS*LabelHosts.foreground:         MistyRose1
+IVS*LabelHosts.font: -adobe-courier-bold-r-normal--17-120-100-100-m-100-iso8859-1
+IVS*LabelHosts.width:              278
+IVS*LabelVideo.background:         Black
+IVS*LabelVideo.foreground:         MistyRose1
+IVS*LabelVideo.font: -adobe-courier-bold-r-normal--17-120-100-100-m-100-iso8859-1
+IVS*LabelVideo.width:              60
+IVS*LabelAudio.background:         Black
+IVS*LabelAudio.foreground:         MistyRose1
+IVS*LabelAudio.font: -adobe-courier-bold-r-normal--17-120-100-100-m-100-iso8859-1
+IVS*LabelAudio.width:              70
+IVS*LabelConf.font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVS*SimpleMenu*leftMargin:         15
+IVS*MsgError.background:           Red
+IVS*FormList.borderWidth:          1
+IVS*HostName.width:                270
+IVS*HostName.font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVS*HostName.background:           White
+IVS*MyHostName.width:              270
+IVS*MyHostName.font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVS*MyHostName.background:         MistyRose1
+IVS*ButtonDAudio.internalWidth:    2
+IVS*ButtonDVideo.internalWidth:    2
+IVS*ButtonDAudio.internalHeight:   2
+IVS*ButtonDVideo.internalHeight:   2
+IVS*ButtonDAudio.width:            70
+IVS*ButtonDVideo.width:            60
+IVS*Showing.background:            Green
+
+# IVSD PARAMETERS
+
+IVSD*font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVSD*Form.borderWidth:                 0
+IVSD*Form.background:                  LightSteelBlue
+IVSD*Command.background:               DarkSlateGrey
+IVSD*Command.foreground:               MistyRose
+IVSD*Label.background:                 LightSteelBlue
+IVSD*Label.borderWidth:                0
+IVSD*Daemon.foreground:                Black
+IVSD*Daemon.background:                LightSteelBlue
+IVSD*MsgWarning.background:            Red
+IVSD*Accept.background:                Green
+IVSD*Accept.foreground:                Black
+IVSD*Refuse.background:                Red
+IVSD*Refuse.foreground:                Black
+IVSD*MsgRequest.background:            LightSteelBlue
+IVSD*MsgRequest.Label.background:      MistyRose
+IVSD*Host.background:                  LightSteelBlue
+IVSD*Host.label:                       Enter hostname:
+IVSD*Group.label:                      Enter multicast address:
+IVSD*TTL.label:                        Enter TTL value:
+IVSD*Text*editType:                    edit
+IVSD*Text.borderWidth:                 0
+IVSD*TextHost.width:                   200
+IVSD*TextTTL.width:                    30
+IVSD*TextGroup.width:                  150
+
+
+# IVS_RECORD PARAMETERS
+
+IVS_RECORD*font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVS_RECORD*MainForm.background:             LightSteelBlue
+IVS_RECORD*MsgWarning.background:           Red
+IVS_RECORD*MsgShowWarning.background:       LightSteelBlue
+IVS_RECORD*MsgShowWarning.label.background: MistyRose
+IVS_RECORD*Command.background:              DarkSlateGrey
+IVS_RECORD*Command.foreground:              MistyRose
+IVS_RECORD*ButtonQuit.background:           Red
+IVS_RECORD*ButtonQuit.foreground:           White
+IVS_RECORD*ButtonQuit.label:                Quit
+IVS_RECORD*ButtonClear.label:               Clear  
+
+
+# IVS_REPLAY PARAMETERS
+
+IVS_REPLAY*font: -adobe-courier-bold-r-normal--14-100-100-100-m-90-iso8859-1
+IVS_REPLAY*Label.borderWidth:            0
+IVS_REPLAY*Label.background:             LightSteelBlue
+IVS_REPLAY*Form.borderWidth:             0
+IVS_REPLAY*Form.background:              LightSteelBlue
+IVS_REPLAY*Form1.borderWidth:            1
+IVS_REPLAY*Form2.borderWidth:            1
+IVS_REPLAY*MainForm.borderWidth:         0
+IVS_REPLAY*Command.background:           DarkSlateGrey
+IVS_REPLAY*Command.foreground:           MistyRose1
+IVS_REPLAY*LabelTitle.label:             IVS_REPLAY (2.2)
+IVS_REPLAY*LabelTitle.background:        Black
+IVS_REPLAY*LabelTitle.foreground:        MistyRose1
+IVS_REPLAY*LabelTitle.font: -adobe-courier-bold-r-normal--17-120-100-100-m-100-iso8859-1
+IVS_REPLAY*NameBrightness.label:         Brightness:
+IVS_REPLAY*NameContrast.label:           Contrast:
+IVS_REPLAY*ButtonDefault.label:          Default
+IVS_REPLAY*ButtonQuit.label:             Quit
+IVS_REPLAY*ButtonQuit.background:        Red
+IVS_REPLAY*ButtonQuit.foreground:        White
+IVS_REPLAY*ButtonPlay.label:             Push to play
+IVS_REPLAY*NameVolAudio.label:           Volume Gain:
+IVS_REPLAY*FormScale.borderWidth:        0
+IVS_REPLAY*ScrollScale.orientation:      horizontal
+IVS_REPLAY*ScrollScale.width:            100
+IVS_REPLAY*ScrollScale.height:           10
+IVS_REPLAY*ScrollScale.borderWidth:      4
+IVS_REPLAY*ScrollScale.minimumThumb:     4
+IVS_REPLAY*ScrollScale.thickness:        4
+IVS_REPLAY*ScrollScale.background:       LightSteelBlue4
+IVS_REPLAY*ScrollScale.foreground:       White
+IVS_REPLAY*NameScale.borderWidth:        0
+IVS_REPLAY*ValueScale.borderWidth:       0
+IVS_REPLAY*MsgError.background:          Red
+IVS_REPLAY*FormList.borderWidth:         1
+
+
+
